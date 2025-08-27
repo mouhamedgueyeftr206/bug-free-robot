@@ -371,6 +371,7 @@ const messagesArea = document.getElementById('messagesArea');
 const messageInput = document.getElementById('messageInput');
 const chatForm = document.getElementById('chatForm');
 const sendBtn = document.getElementById('sendBtn');
+const existingMessageIds = new Set();
     
 // Auto-resize textarea
 messageInput.addEventListener('input', function() {
@@ -417,10 +418,11 @@ function sendMessage() {
     .then(data => {
         if (data.success) {
             // Ajouter le message immédiatement
-            addMessage(data.message.content, true, data.message.created_at);
+            addMessage(data.message.id, data.message.content, true, data.message.created_at);
             // Vider le champ
             messageInput.value = '';
             messageInput.style.height = 'auto';
+            scrollToBottom();
         } else {
             alert('Erreur: ' + (data.error || 'Envoi échoué'));
         }
@@ -438,16 +440,18 @@ function sendMessage() {
 }
     
 // Fonction simple pour ajouter un message
-function addMessage(content, isOwn, time) {
+function addMessage(id, content, isOwn, time) {
+    if (id && existingMessageIds.has(id)) return;
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+    if (id) messageDiv.dataset.messageId = id;
     messageDiv.innerHTML = `
         <div class="message-content">${escapeHtml(content)}</div>
         <div class="message-time">${time}</div>
     `;
     
     messagesArea.appendChild(messageDiv);
-    messagesArea.scrollTop = messagesArea.scrollHeight;
+    if (id) existingMessageIds.add(id);
 }
     
 // Échapper le HTML
@@ -463,12 +467,17 @@ messageInput.focus();
 
 // Auto-refresh simple des messages toutes les 5s
 function fetchMessages() {
+    const wasNearBottom = isNearBottom();
     fetch(`/chat/private/${conversationId}/messages/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
         .then(r => r.json())
         .then(data => {
-            // Rebuild messages list
-            messagesArea.innerHTML = '';
-            (data.messages || []).forEach(m => addMessage(m.content, m.is_own, m.created_at));
+            // Append only new messages
+            (data.messages || []).forEach(m => {
+                if (!existingMessageIds.has(m.id)) {
+                    addMessage(m.id, m.content, m.is_own, m.created_at);
+                }
+            });
+            if (wasNearBottom) scrollToBottom();
         })
         .catch(() => {});
 }
@@ -477,7 +486,21 @@ fetchMessages();
 
 // Scroll initial vers le bas au chargement
 window.addEventListener('load', function() {
-    messagesArea.scrollTop = messagesArea.scrollHeight;
+    // Initialize existing ids from server-rendered messages
+    Array.from(messagesArea.children).forEach((el) => {
+        const id = el.dataset ? el.dataset.messageId : null;
+        if (id) existingMessageIds.add(id);
+    });
+    scrollToBottom();
 });
+
+function scrollToBottom() {
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+
+function isNearBottom() {
+    const threshold = 80; // px
+    return messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight < threshold;
+}
 </script>
 {% endblock %}

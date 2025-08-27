@@ -375,6 +375,7 @@ const messagesArea = document.getElementById('messagesArea');
 const messageInput = document.getElementById('messageInput');
 const chatForm = document.getElementById('chatForm');
 const sendBtn = document.getElementById('sendBtn');
+const existingMessageIds = new Set();
     
 // Auto-resize textarea
 messageInput.addEventListener('input', function() {
@@ -421,10 +422,11 @@ function sendMessage() {
     .then(data => {
         if (data.success) {
             // Ajouter le message immédiatement
-            addMessage(data.message.content, true, data.message.created_at, data.message.sender);
+            addMessage(data.message.id, data.message.content, true, data.message.created_at, data.message.sender);
             // Vider le champ
             messageInput.value = '';
             messageInput.style.height = 'auto';
+            scrollToBottom();
         } else {
             alert('Erreur: ' + (data.error || 'Envoi échoué'));
         }
@@ -442,9 +444,11 @@ function sendMessage() {
 }
     
 // Fonction simple pour ajouter un message
-function addMessage(content, isOwn, time, sender) {
+function addMessage(id, content, isOwn, time, sender) {
+    if (id && existingMessageIds.has(id)) return;
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+    if (id) messageDiv.dataset.messageId = id;
     
     let messageHTML = '';
     if (!isOwn && sender) {
@@ -457,7 +461,7 @@ function addMessage(content, isOwn, time, sender) {
     
     messageDiv.innerHTML = messageHTML;
     messagesArea.appendChild(messageDiv);
-    messagesArea.scrollTop = messagesArea.scrollHeight;
+    if (id) existingMessageIds.add(id);
 }
     
 // Échapper le HTML
@@ -473,32 +477,17 @@ messageInput.focus();
 
 // Auto-refresh simple des messages groupe toutes les 5s
 function fetchGroupMessages() {
+    const wasNearBottom = isNearBottom();
     fetch(`/chat/group/${groupId}/messages/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
         .then(r => r.json())
         .then(data => {
             if (!data.messages) return;
-            messagesArea.innerHTML = '';
             data.messages.forEach(m => {
-                const isOwn = m.is_own;
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
-                if (!isOwn && m.sender) {
-                    const senderDiv = document.createElement('div');
-                    senderDiv.className = 'message-sender';
-                    senderDiv.textContent = m.sender;
-                    messageDiv.appendChild(senderDiv);
+                if (!existingMessageIds.has(m.id)) {
+                    addMessage(m.id, m.content, m.is_own, m.created_at, m.sender);
                 }
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'message-content';
-                contentDiv.textContent = m.content;
-                const timeDiv = document.createElement('div');
-                timeDiv.className = 'message-time';
-                timeDiv.textContent = m.created_at;
-                messageDiv.appendChild(contentDiv);
-                messageDiv.appendChild(timeDiv);
-                messagesArea.appendChild(messageDiv);
             });
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+            if (wasNearBottom) scrollToBottom();
         })
         .catch(() => {});
 }
@@ -507,7 +496,20 @@ fetchGroupMessages();
 
 // Scroll initial vers le bas au chargement
 window.addEventListener('load', function() {
-    messagesArea.scrollTop = messagesArea.scrollHeight;
+    Array.from(messagesArea.children).forEach((el) => {
+        const id = el.dataset ? el.dataset.messageId : null;
+        if (id) existingMessageIds.add(id);
+    });
+    scrollToBottom();
 });
+
+function scrollToBottom() {
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+
+function isNearBottom() {
+    const threshold = 80;
+    return messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight < threshold;
+}
 </script>
 {% endblock %}
