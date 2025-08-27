@@ -1,0 +1,132 @@
+/* Styles pour le système de notifications */
+
+/* Indicateur de notification */
+.notification-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: rgba(15, 23, 41, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.notification-indicator:hover {
+    transform: scale(1.1);
+}
+
+.notification-indicator.has-notifications {
+    background-color: var(--primary-color);
+    animation: pulse 2s infinite;
+}
+
+.notification-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ff4757;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.notification-link {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+}
+
+/* Animation de pulsation pour les nouvelles notifications */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(108, 92, 231, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(108, 92, 231, 0);
+    }
+}
+
+/* Masquer l'indicateur de notification sur les pages de chat */
+body.chat-page .notification-indicator {
+    display: none !important;
+}
+
+/* Popup de notification */
+.notification-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(15, 23, 41, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-left: 4px solid var(--primary-color);
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.notification-popup.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification-popup-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.notification-popup-content i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.notification-popup-content p {
+    color: white;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Style pour la page de notifications */
+.notifications-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+body.logged-in .notification-indicator {
+    display: flex;
+}
+
+/* Style pour le badge de notification dans le menu */
+.notification-badge {
+    background-color: #ff4757;
+    color: white;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    margin-left: 5px;
+    display: inline-block;
+}

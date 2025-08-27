@@ -1,0 +1,203 @@
+/* Système d'appréciation - Style principal */
+.appreciation-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px !important;
+    align-items: center !important;
+    margin: 8px 0 !important;
+}
+
+.appreciation-title {
+    font-size: 9px !important;
+    color: #ffffff !important;
+    text-align: center !important;
+    margin-bottom: 2px !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 10px rgba(108, 92, 231, 0.8) !important;
+}
+
+.appreciation-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0px !important;
+    align-items: center !important;
+}
+
+.appreciation-button {
+    position: relative !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding: 2px !important;
+    border-radius: 50% !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0px !important;
+    min-width: 48px !important;
+    margin: 0 !important;
+}
+
+.appreciation-button:hover {
+    background: rgba(108, 92, 231, 0.2) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 15px rgba(108, 92, 231, 0.6) !important;
+}
+
+.appreciation-button.selected {
+    background: rgba(108, 92, 231, 0.4) !important;
+    box-shadow: 0 0 20px rgba(108, 92, 231, 0.8) !important;
+    animation: pulse-glow 2s infinite !important;
+}
+
+.appreciation-emoji {
+    font-size: 22px !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+    filter: drop-shadow(0 0 6px rgba(108, 92, 231, 0.5)) !important;
+    transition: all 0.3s ease !important;
+    user-select: none !important;
+    pointer-events: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+.appreciation-button:hover .appreciation-emoji {
+    transform: scale(1.2) !important;
+    filter: drop-shadow(0 0 12px rgba(108, 92, 231, 0.8)) !important;
+}
+
+.appreciation-button.selected .appreciation-emoji {
+    animation: rotate 0.5s ease-in-out !important;
+}
+
+.appreciation-count {
+    font-size: 9px !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 4px rgba(108, 92, 231, 0.8) !important;
+    background: rgba(108, 92, 231, 0.3) !important;
+    padding: 1px 4px !important;
+    border-radius: 8px !important;
+    min-width: 16px !important;
+    text-align: center !important;
+}
+
+.appreciation-tooltip {
+    position: absolute !important;
+    right: 100% !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: rgba(0, 0, 0, 0.9) !important;
+    color: white !important;
+    padding: 6px 10px !important;
+    border-radius: 6px !important;
+    font-size: 10px !important;
+    white-space: nowrap !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.3s ease !important;
+    margin-right: 8px !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(108, 92, 231, 0.3) !important;
+    z-index: 1000 !important;
+}
+
+.appreciation-tooltip::after {
+    content: '' !important;
+    position: absolute !important;
+    right: -4px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    border-left: 4px solid rgba(0, 0, 0, 0.9) !important;
+    border-top: 4px solid transparent !important;
+    border-bottom: 4px solid transparent !important;
+}
+
+.appreciation-button:hover .appreciation-tooltip {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(-50%) translateX(-3px) !important;
+}
+
+/* Animations */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(108, 92, 231, 0.8);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(108, 92, 231, 1);
+    }
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animation d'entrée */
+.appreciation-container {
+    animation: slideInUp 0.5s ease-out !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .appreciation-container {
+        gap: 1px !important;
+    }
+    
+    .appreciation-emoji {
+        font-size: 24px !important;
+    }
+    
+    .appreciation-button {
+        padding: 3px !important;
+        min-width: 38px !important;
+    }
+    
+    .appreciation-count {
+        font-size: 8px !important;
+        padding: 1px 3px !important;
+    }
+}
+
+/* Protection des images */
+.appreciation-emoji {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    -khtml-user-drag: none !important;
+    -moz-user-drag: none !important;
+    -o-user-drag: none !important;
+    user-drag: none !important;
+    pointer-events: none !important;
+}
+
+/* Masquer les statistiques multiples */
+.appreciation-stats {
+    display: none !important;
+}
