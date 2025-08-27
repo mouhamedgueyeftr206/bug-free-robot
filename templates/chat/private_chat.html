@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Chat avec {{ other_user.username }}{% endblock %}
+{% block title %}Chat avec {{ other.username }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -272,21 +272,21 @@
     }
 
     /* Scrollbar personnalisée */
-    .messages-container::-webkit-scrollbar {
+    .messages-area::-webkit-scrollbar {
         width: 6px;
     }
 
-    .messages-container::-webkit-scrollbar-track {
+    .messages-area::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.1);
         border-radius: 3px;
     }
 
-    .messages-container::-webkit-scrollbar-thumb {
+    .messages-area::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.3);
         border-radius: 3px;
     }
 
-    .messages-container::-webkit-scrollbar-thumb:hover {
+    .messages-area::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.5);
     }
 
@@ -299,11 +299,11 @@
             padding: 12px 15px;
         }
         
-        .messages-container {
+        .messages-area {
             padding: 15px;
         }
         
-        .message-input-container {
+        .message-input-area {
             padding: 12px 15px;
         }
     }
@@ -321,16 +321,16 @@
         </a>
         
         <div class="chat-user-info">
-            {% if other_user_profile.profileimg %}
-                <img src="{{ other_user_profile.profileimg.url }}" alt="{{ other_user.username }}" class="user-avatar">
+            {% if other.profile.profileimg %}
+                <img src="{{ other.profile.profileimg.url }}" alt="{{ other.username }}" class="user-avatar">
             {% else %}
                 <div class="user-avatar default">
-                    {{ other_user.username|first|upper }}
+                    {{ other.username|slice:":1"|upper }}
                 </div>
             {% endif %}
             
             <div class="user-details">
-                <h3>{{ other_user.username }}</h3>
+                <h3>{{ other.username }}</h3>
                 <p class="user-status">En ligne</p>
             </div>
         </div>
