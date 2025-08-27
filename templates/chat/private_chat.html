@@ -339,7 +339,7 @@
     <!-- Messages -->
     <div class="messages-area" id="messagesArea">
         {% for message in messages %}
-            <div class="message {% if message.sender == request.user %}own{% else %}other{% endif %}">
+            <div class="message {% if message.sender == request.user %}own{% else %}other{% endif %}" data-message-id="{{ message.id }}">
                 <div class="message-content">{{ message.content }}</div>
                 <div class="message-time">{{ message.created_at|date:"H:i" }}</div>
             </div>
