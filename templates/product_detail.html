@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="product-page">
+    <div class="product-container">
+        <!-- Carousel Section -->
+        <div class="carousel-section">
+            <div class="carousel-container">
+                <div class="carousel-track" id="carousel-track">
+                    <!-- Vidéo en premier -->
+                    {% if video %}
+                    <div class="carousel-slide">
+                        <video controls class="carousel-media">
+                            <source src="{{ video.video.url }}" type="video/mp4">
+                            Votre navigateur ne supporte pas la lecture de vidéos.
+                        </video>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Images supplémentaires -->
+                    {% if images %}
+                    {% for image in images %}
+                    <div class="carousel-slide">
+                        <img src="{{ image.image.url }}" alt="Image du produit" class="carousel-media" onclick="openModal(this.src)">
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                
+                <button class="carousel-button prev" onclick="changeSlide(-1)">&#10094;</button>
+                <button class="carousel-button next" onclick="changeSlide(1)">&#10095;</button>
+                
+                <div class="carousel-dots" id="carousel-dots">
+                    <!-- Les points seront générés dynamiquement par JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Info Section -->
+        <div class="product-info-section">
+            <div class="product-header">
+                <div class="game-type-badge-detail">
+                    <i class="fas fa-gamepad"></i>
+                    {{ post.get_game_display_name }}
+                </div>
+                <div class="product-stats-detail">
+                    <div class="stat-detail-item">
+                        <i class="fas fa-coins"></i>
+                        <span class="stat-label">Pièces/Coins:</span>
+                        <span class="stat-value">{{ post.coins }}</span>
+                    </div>
+                    <div class="stat-detail-item">
+                        <i class="fas fa-trophy"></i>
+                        <span class="stat-label">Niveau:</span>
+                        <span class="stat-value">{{ post.level }}</span>
+                    </div>
+                </div>
+                <div class="product-title-price">
+                    <h1 class="product-title">{{ post.title }}</h1>
+                    <div class="product-price">{{ post.price }} €</div>
+                </div>
+            </div>
+            
+            <div class="product-description">
+                <h3>Description</h3>
+                <p>{{ post.caption }}</p>
+            </div>
+            
+            <div class="seller-info">
+                <img src="{{ post.author.profile.profileimg.url }}" alt="Photo de profil" class="seller-profile-img">
+                <div class="seller-details">
+                    <span class="seller-name">@{{ post.author.username }}</span>
+                    {% if seller_badge %}
+                    <span class="reputation-badge-name-detail">{{ seller_badge.name }}</span>
+                    {% endif %}
+                    <span class="post-date">Publié le {{ post.created_at|date:"d/m/Y" }}</span>
+                </div>
+                {% if seller_badge %}
+                <img src="/static/badges/{{ seller_badge.icon }}" 
+                     alt="{{ seller_badge.name }}" 
+                     class="seller-badge-icon-detail-large"
+                     style="user-select: none !important; pointer-events: none !important; -webkit-user-drag: none; -webkit-touch-callout: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));"
+                     oncontextmenu="return false;" ondragstart="return false;"
+                     onerror="this.style.display='none';">
+                {% endif %}
+            </div>
+            
+            {% if user != post.author %}
+            <div class="product-actions">
+                <form method="POST" action="{% url 'initiate_transaction' post.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-buy">
+                        <i class="fas fa-shopping-cart"></i>
+                        Acheter
+                    </button>
+                </form>
+                <button class="btn-report" onclick="reportProduct()">
+                    <i class="fas fa-flag"></i>
+                    Signaler
+                </button>
+            </div>
+            {% else %}
+            <div class="product-actions">
+                <form method="POST" action="{% url 'delete_post' post.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-report" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.')">
+                        <i class="fas fa-trash"></i>
+                        Supprimer
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les images -->
+<div id="imageModal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="modalImg">
+</div>
+
+<style>
+.product-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    padding: 2rem 0;
+}
+
+.product-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 2rem;
+}
+
+/* Carousel Section */
+.carousel-section {
+    margin-bottom: 2rem;
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    height: 100%;
+}
+
+.carousel-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-media {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.carousel-media:hover {
+    transform: scale(1.02);
+}
+
+.carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    padding: 1rem;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.carousel-button:hover {
+    background: rgba(108, 92, 231, 0.8);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-button.prev {
+    left: 1rem;
+}
+
+.carousel-button.next {
+    right: 1rem;
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dot.active {
+    background: var(--primary-color);
+    transform: scale(1.2);
+}
+
+.dot:hover {
+    background: var(--primary-color);
+}
+
+/* Product Info Section */
+.product-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.product-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.game-type-badge-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.game-type-badge-detail i {
+    font-size: 1.1rem;
+}
+
+.product-stats-detail {
+    display: flex;
+    gap: 1.5rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+}
+
+.stat-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem 1.5rem;
+    border-radius: 15px;
+    border: 1px solid rgba(108, 92, 231, 0.3);
+    flex: 1;
+    min-width: 200px;
+}
+
+.stat-detail-item i {
+    font-size: 1.3rem;
+    color: var(--secondary-color);
+    width: 20px;
+    text-align: center;
+}
+
+.stat-label {
+    color: #ccc;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+}
+
+.stat-value {
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.product-title-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.product-title {
+    font-size: 2rem;
+    margin: 0;
+    color: var(--primary-color);
+    text-shadow: 0 0 15px var(--primary-color);
+    flex: 1;
+}
+
+.product-price {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-color), #8c7ae6);
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(108, 92, 231, 0.3);
+    white-space: nowrap;
+}
+
+.product-description {
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.product-description h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.product-description p {
+    color: #ccc;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.seller-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: space-between;
+}
+
+.seller-profile-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.seller-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex-grow: 1;
+}
+
+.seller-name {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.seller-username {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.reputation-badge-name-detail {
+    color: #aaa;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.seller-badge-icon-detail-large {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* Styles pour les badges vendeur sur la page de détail */
+.seller-reputation-badge-detail {
+    margin-top: 1rem;
+}
+
+.badge-with-image-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: linear-gradient(45deg, rgba(108, 92, 231, 0.15), rgba(162, 155, 254, 0.15));
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.2);
+}
+
+.badge-with-image-detail:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 92, 231, 0.3);
+    background: linear-gradient(45deg, rgba(108, 92, 231, 0.2), rgba(162, 155, 254, 0.2));
+}
+
+.seller-badge-icon-detail {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 6px rgba(108, 92, 231, 0.4));
+}
+
+.badge-fallback-detail {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    text-shadow: 0 0 8px var(--primary-color);
+}
+
+.badge-text-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.reputation-badge-name-detail {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-shadow: 0 0 5px var(--primary-color);
+    line-height: 1.2;
+}
+
+.reputation-score-detail {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.post-date {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.product-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.product-actions form {
+    margin: 0;
+}
+
+.btn-contact, .btn-buy, .btn-report {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    min-width: 120px;
+    background: none;
+    font-family: inherit;
+}
+
+.btn-contact {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-contact:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-buy {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-buy:hover {
+    background: #7c5ac2;
+}
+
+.btn-report {
+    background: rgba(255, 59, 48, 0.8);
+    color: white;
+}
+
+.btn-report:hover {
+    background: rgba(255, 59, 48, 1);
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+    margin-top: 5%;
+}
+
+.close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #bbb;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .product-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+    
+    .product-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .product-title {
+        font-size: 1.5rem;
+    }
+    
+    .product-price {
+        width: 100%;
+        text-align: center;
+        font-size: 1.5rem;
+    }
+    
+    .carousel-container {
+        height: 300px;
+    }
+    
+    .product-actions {
+        flex-direction: column;
+    }
+    
+    .btn-contact, .btn-buy, .btn-report {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+let currentSlide = 0;
+let slides = [];
+
+function initializeCarousel() {
+    slides = document.querySelectorAll('.carousel-slide');
+    const dotsContainer = document.getElementById('carousel-dots');
+    
+    // Créer les points de navigation
+    slides.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        if (index === 0) dot.classList.add('active');
+        dot.onclick = () => goToSlide(index);
+        dotsContainer.appendChild(dot);
+    });
+    
+    updateCarousel();
+}
+
+function changeSlide(direction) {
+    currentSlide += direction;
+    if (currentSlide >= slides.length) currentSlide = 0;
+    if (currentSlide < 0) currentSlide = slides.length - 1;
+    updateCarousel();
+}
+
+function goToSlide(index) {
+    currentSlide = index;
+    updateCarousel();
+}
+
+function updateCarousel() {
+    const track = document.getElementById('carousel-track');
+    const dots = document.querySelectorAll('.dot');
+    
+    track.style.transform = `translateX(-${currentSlide * 100}%)`;
+    
+    // Mettre à jour les points actifs
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
+    });
+}
+
+function openModal(src) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImg');
+    modal.style.display = "block";
+    modalImg.src = src;
+}
+
+function reportProduct() {
+    if (confirm('Êtes-vous sûr de vouloir signaler ce produit ?')) {
+        alert('Produit signalé. Notre équipe va examiner le contenu.');
+    }
+}
+
+// Fermer le modal
+document.querySelector('.close').onclick = function() {
+    document.getElementById('imageModal').style.display = "none";
+}
+
+// Fermer le modal en cliquant à l'extérieur
+window.onclick = function(event) {
+    const modal = document.getElementById('imageModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
+// Initialiser le carousel au chargement
+document.addEventListener('DOMContentLoaded', initializeCarousel);
+</script>
+{% endblock %} 

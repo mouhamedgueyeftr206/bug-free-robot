@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="main-container">
+    <div class="success-container glass-effect">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        
+        <h1 class="success-title">Paiement Réussi !</h1>
+        
+        <div class="transaction-details">
+            <h3>Détails de la transaction</h3>
+            <div class="detail-item">
+                <span class="label">Compte:</span>
+                <span class="value">{{ transaction.post.title }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Montant:</span>
+                <span class="value price">{{ transaction.amount }} €</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Vendeur:</span>
+                <span class="value">{{ transaction.seller.username }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Date:</span>
+                <span class="value">{{ transaction.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+        </div>
+        
+        <div class="next-steps">
+            <h3>Prochaines étapes</h3>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>Contactez le vendeur</h4>
+                    <p>Utilisez le chat intégré pour échanger avec le vendeur et recevoir les données du compte.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Vérifiez le compte</h4>
+                    <p>Testez les identifiants reçus pour vous assurer qu'ils fonctionnent correctement.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Confirmez la réception</h4>
+                    <p>Une fois satisfait, confirmez la réception pour libérer le paiement au vendeur.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{% url 'transaction_detail' transaction.id %}" class="btn-primary">
+                <i class="fas fa-comments"></i>
+                Aller au chat
+            </a>
+            <a href="{% url 'index' %}" class="btn-secondary">
+                <i class="fas fa-home"></i>
+                Retour à l'accueil
+            </a>
+        </div>
+        
+        <div class="security-notice">
+            <i class="fas fa-shield-alt"></i>
+            <p>Votre paiement est sécurisé par notre système d'escrow. Le vendeur ne recevra son paiement qu'après votre confirmation.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .main-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .success-container {
+        text-align: center;
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        border: 1px solid var(--primary-color);
+    }
+    
+    .success-icon {
+        font-size: 5rem;
+        color: #2ecc71;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .success-title {
+        color: #2ecc71;
+        font-family: 'RussoOne', sans-serif;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 0 0 15px #2ecc71;
+    }
+    
+    .transaction-details {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+    
+    .transaction-details h3 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .label {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: bold;
+    }
+    
+    .value {
+        color: white;
+    }
+    
+    .value.price {
+        color: #2ecc71;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .next-steps {
+        margin-bottom: 2rem;
+    }
+    
+    .next-steps h3 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+    }
+    
+    .step {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+    
+    .step-number {
+        background: var(--primary-color);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .step-content h4 {
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .step-content p {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-primary, .btn-secondary {
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    .btn-primary:hover, .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-primary:hover {
+        background: white;
+        color: var(--primary-color);
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .security-notice {
+        background: rgba(46, 204, 113, 0.1);
+        border: 1px solid #2ecc71;
+        border-radius: 10px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .security-notice i {
+        color: #2ecc71;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .security-notice p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+        text-align: left;
+    }
+    
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+    
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .step {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .security-notice {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %} 

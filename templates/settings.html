@@ -1,0 +1,641 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-card">
+        <h2>Personnalisation du profil</h2>
+        
+        <form method="POST" enctype="multipart/form-data" class="settings-form">
+            {% csrf_token %}
+            
+            <!-- Section Bannière -->
+            <div class="banner-upload">
+                <h3>Bannière</h3>
+                <div class="preview-banner">
+                    {% if user_profile.banner %}
+                        <img src="{{ user_profile.banner.url }}" alt="Banner Preview" id="bannerPreview">
+                    {% else %}
+                        <div class="banner-placeholder">
+                            <i class="fas fa-image"></i>
+                            <span>Aucune bannière</span>
+                        </div>
+                    {% endif %}
+                    <label for="bannerPhoto" class="upload-overlay">
+                        <i class="fas fa-camera"></i>
+                        Changer la bannière
+                    </label>
+                </div>
+                <input type="file" id="bannerPhoto" name="banner" accept="image/*" hidden>
+            </div>
+
+            <!-- Section Photo de profil -->
+            <div class="profile-photo-upload">
+                <h3>Photo de profil</h3>
+                <div class="preview-circle">
+                    {% if user_profile.profileimg %}
+                        <img src="{{ user_profile.profileimg.url }}" alt="Profile Preview" id="profilePreview">
+                    {% else %}
+                        <div class="profile-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    <label for="profilePhoto" class="upload-overlay">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                </div>
+                <input type="file" name="profileimg" id="profilePhoto" accept="image/*" hidden>
+            </div>
+
+            <!-- Informations du profil -->
+            <div class="profile-info-form">
+                <div class="form-group">
+                    <label for="pseudo">
+                        <i class="fas fa-user"></i>
+                        Nom d'utilisateur
+                    </label>
+                    <input name="username" type="text" id="pseudo" class="input-field" 
+                           placeholder="Votre pseudo" value="{{ user.username }}"
+                           {% if not can_change_username %}disabled{% endif %}>
+                    {% if not can_change_username %}
+                        <p class="warning-text">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Vous ne pouvez changer votre pseudo que tous les deux mois. 
+                            Prochain changement possible le : {{ next_username_change_date }}
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">
+                        <i class="fas fa-comment-alt"></i>
+                        Biographie
+                    </label>
+                    <textarea name="bio" id="bio" class="input-field" rows="4" 
+                              placeholder="Parlez-nous de vous...">{{ user_profile.bio }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="localisation">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Localisation
+                    </label>
+                    <input name="location" type="text" id="localisation" class="input-field" 
+                           placeholder="Votre localisation..." value="{{ user_profile.location }}">
+                </div>
+
+                <!-- Section Jeux Favoris -->
+                <div class="favorite-games-section">
+                    <h3>
+                        <i class="fas fa-gamepad"></i>
+                        Jeux Favoris
+                    </h3>
+                    <p class="section-description">
+                        Sélectionnez vos jeux favoris pour personnaliser votre profil et recevoir des recommandations adaptées.
+                    </p>
+                    
+                    <div class="games-grid">
+                        {% for game_code, game_name in game_choices %}
+                            <div class="game-card" data-game="{{ game_code }}">
+                                <input type="checkbox" name="favorite_games" value="{{ game_code }}" 
+                                       id="game_{{ game_code }}" class="game-checkbox"
+                                       {% if game_code in user_favorite_games %}checked{% endif %}>
+                                <label for="game_{{ game_code }}" class="game-label">
+                                    <div class="game-icon">
+                                        {% if game_code == 'FreeFire' %}
+                                            <i class="fas fa-fire"></i>
+                                        {% elif game_code == 'PUBG' %}
+                                            <i class="fas fa-crosshairs"></i>
+                                        {% elif game_code == 'COD' %}
+                                            <i class="fas fa-skull-crossbones"></i>
+                                        {% elif game_code == 'efootball' %}
+                                            <i class="fas fa-futbol"></i>
+                                        {% elif game_code == 'fc25' %}
+                                            <i class="fas fa-trophy"></i>
+                                        {% elif game_code == 'bloodstrike' %}
+                                            <i class="fas fa-bomb"></i>
+                                        {% else %}
+                                            <i class="fas fa-gamepad"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="game-name">{{ game_name }}</div>
+                                    <div class="selection-indicator">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <button type="submit" class="save-button">
+                    <i class="fas fa-save"></i>
+                    Sauvegarder les modifications
+                </button>
+            </div>
+        </form>
+        
+        <!-- Section Informations de Paiement -->
+        <div class="payment-info-section">
+            <h3>
+                <i class="fas fa-credit-card"></i>
+                Informations de Paiement
+            </h3>
+            <p class="payment-info-text">
+                Configurez vos informations de paiement pour recevoir votre argent lors des ventes.
+            </p>
+            <div class="payment-actions">
+                <a href="{% url 'seller_payment_setup' %}" class="payment-setup-button">
+                    <i class="fas fa-cog"></i>
+                    {% if user.payment_info.is_verified %}
+                        Modifier les Paiements
+                    {% else %}
+                        Configurer les Paiements
+                    {% endif %}
+                </a>
+                {% if user.payment_info.is_verified %}
+                    <div class="payment-status">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Informations configurées</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.settings-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.settings-card {
+    background: rgba(15, 23, 41, 0.95);
+    border-radius: 15px;
+    padding: 2.5rem;
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 30px rgba(108, 92, 231, 0.2);
+}
+
+.settings-card h2 {
+    text-align: center;
+    color: var(--primary-color);
+    font-family: 'RussoOne', sans-serif;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 15px var(--primary-color);
+}
+
+.settings-card h3 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.banner-upload {
+    margin-bottom: 2rem;
+}
+
+.preview-banner {
+    position: relative;
+    height: 200px;
+    border-radius: 15px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--primary-color);
+}
+
+.preview-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.banner-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    gap: 1rem;
+}
+
+.banner-placeholder i {
+    font-size: 2rem;
+}
+
+.profile-photo-upload {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.preview-circle {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--primary-color);
+    box-shadow: 0 0 20px var(--primary-color);
+}
+
+.preview-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 3rem;
+    color: var(--text-color);
+}
+
+.upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+    color: white;
+    gap: 0.5rem;
+}
+
+.upload-overlay:hover {
+    opacity: 1;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    box-shadow: 0 0 15px var(--primary-color);
+}
+
+.input-field:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.warning-text {
+    color: #ff9800;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.save-button {
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.save-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px var(--primary-color);
+}
+
+/* Section Jeux Favoris */
+.favorite-games-section {
+    margin: 2rem 0;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 15px;
+    border: 1px solid rgba(108, 92, 231, 0.3);
+}
+
+.favorite-games-section h3 {
+    color: var(--primary-color);
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-description {
+    color: #b0b0b0;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.game-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(108, 92, 231, 0.3);
+    border-color: rgba(108, 92, 231, 0.5);
+}
+
+.game-checkbox {
+    display: none;
+}
+
+.game-label {
+    display: block;
+    padding: 1.5rem;
+    cursor: pointer;
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.game-icon {
+    font-size: 2.5rem;
+    color: #888;
+    transition: all 0.3s ease;
+    margin-bottom: 0.5rem;
+}
+
+.game-name {
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.selection-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 25px;
+    height: 25px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 0.8rem;
+}
+
+/* États des cards de jeux */
+.game-checkbox:checked + .game-label {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.2) 0%, rgba(108, 92, 231, 0.1) 100%);
+    border-color: var(--primary-color);
+}
+
+.game-checkbox:checked + .game-label .game-icon {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.game-checkbox:checked + .game-label .selection-indicator {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.game-checkbox:checked + .game-label .game-name {
+    color: var(--primary-color);
+}
+
+/* Couleurs spécifiques par jeu */
+.game-card[data-game="FreeFire"] .game-checkbox:checked + .game-label .game-icon {
+    color: #ff6b35;
+}
+
+.game-card[data-game="PUBG"] .game-checkbox:checked + .game-label .game-icon {
+    color: #f7931e;
+}
+
+.game-card[data-game="COD"] .game-checkbox:checked + .game-label .game-icon {
+    color: #00d4aa;
+}
+
+.game-card[data-game="efootball"] .game-checkbox:checked + .game-label .game-icon {
+    color: #00a8ff;
+}
+
+.game-card[data-game="fc25"] .game-checkbox:checked + .game-label .game-icon {
+    color: #ffd700;
+}
+
+.game-card[data-game="bloodstrike"] .game-checkbox:checked + .game-label .game-icon {
+    color: #e74c3c;
+}
+
+/* Animation au survol */
+.game-label:hover .game-icon {
+    transform: scale(1.1);
+    color: var(--primary-color);
+}
+
+.game-label:hover {
+    background: rgba(108, 92, 231, 0.1);
+}
+
+/* Section Informations de Paiement */
+.payment-info-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.payment-info-section h3 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.payment-info-text {
+    color: #b0b0b0;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.payment-setup-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+    color: #000;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+}
+
+.payment-setup-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+    color: #000;
+}
+
+.payment-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.payment-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #4caf50; /* Green color for success */
+    font-size: 0.9rem;
+}
+
+.payment-status i {
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .settings-card {
+        padding: 1.5rem;
+    }
+    
+    .preview-banner {
+        height: 150px;
+    }
+    
+    .payment-info-section {
+        padding: 1.5rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prévisualisation de la photo de profil
+    const profileInput = document.getElementById('profilePhoto');
+    const profilePreview = document.getElementById('profilePreview');
+
+    profileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.id = 'profilePreview';
+                const previewCircle = document.querySelector('.preview-circle');
+                const oldPreview = document.getElementById('profilePreview');
+                if (oldPreview) {
+                    oldPreview.remove();
+                }
+                const placeholder = previewCircle.querySelector('.profile-placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                previewCircle.insertBefore(img, previewCircle.firstChild);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Prévisualisation de la bannière
+    const bannerInput = document.getElementById('bannerPhoto');
+    const bannerPreview = document.getElementById('bannerPreview');
+
+    bannerInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.id = 'bannerPreview';
+                const previewBanner = document.querySelector('.preview-banner');
+                const oldPreview = document.getElementById('bannerPreview');
+                if (oldPreview) {
+                    oldPreview.remove();
+                }
+                const placeholder = previewBanner.querySelector('.banner-placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                previewBanner.insertBefore(img, previewBanner.firstChild);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+});
+</script>
+{% endblock %}

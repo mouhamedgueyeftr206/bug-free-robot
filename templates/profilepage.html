@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="profile-container">
+    <!-- En-tête du profil -->
+    <div class="profile-header">
+        <div class="profile-banner">
+            <div class="large-profile-image">
+                <img src="openart-image_L27zpjEm_1735310548487_raw.jpg" alt="Profile Picture">
+            </div>
+        </div>
+        <div class="profile-info">
+            <h1>@CyberPlayer123</h1>
+            <p class="bio">Explorateur du cyberespace | Collectionneur de NFTs | Gamer passionné 🎮</p>
+        </div>
+    </div>
+
+    <!-- Stats du profil -->
+    <div class="profile-stats">
+        <div class="stat-item">
+            <span class="stat-number">1.2K</span>
+            <span class="stat-label">Ventes réussies</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">850</span>
+            <span class="stat-label">Articles postés</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">156</span>
+            <span class="stat-label">Commentaires</span>
+        </div>
+    </div>
+
+    <!-- Publications -->
+    <div class="posts-container">
+        <h2>Publications</h2>
+        <div class="posts-grid">
+            <!-- Publication individuelle -->
+            <div class="post-card">
+                <img src="open.jpg" alt="Post image">
+                <div class="post-content">
+                    <h3>Mon nouveau NFT !</h3>
+                    <p>Je viens d'acquérir cette pièce unique... 🎉</p>
+                    <div class="post-stats">
+                        <span>❤️ 123</span>
+                        <span>💬 45</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Répétez ce bloc pour plus de publications -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}

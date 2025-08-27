@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Commande - Boutique Gaming BLIZZ{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px 0;">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-white mb-3" style="font-family: 'Russo One', sans-serif;">
+                <i class="fas fa-credit-card"></i> Finaliser ma commande
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="background: rgba(255,255,255,0.1);">
+                    <li class="breadcrumb-item"><a href="{% url 'shop_home' %}" class="text-white">Boutique</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'cart_view' %}" class="text-white">Panier</a></li>
+                    <li class="breadcrumb-item active text-white-50">Commande</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <form method="post" id="checkoutForm">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Checkout Form -->
+            <div class="col-lg-8 mb-4">
+                <!-- Customer Information -->
+                <div class="card shadow-lg border-0 mb-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                    <div class="card-header" style="background: rgba(108, 92, 231, 0.2); border: none;">
+                        <h5 class="text-white mb-0">
+                            <i class="fas fa-user"></i> Informations personnelles
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white">Prénom *</label>
+                                <input type="text" class="form-control" name="first_name" required 
+                                       value="{% if user.is_authenticated %}{{ user.first_name }}{% endif %}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white">Nom *</label>
+                                <input type="text" class="form-control" name="last_name" required
+                                       value="{% if user.is_authenticated %}{{ user.last_name }}{% endif %}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white">Email *</label>
+                                <input type="email" class="form-control" name="email" required
+                                       value="{% if user.is_authenticated %}{{ user.email }}{% endif %}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white">Téléphone *</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="card shadow-lg border-0 mb-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                    <div class="card-header" style="background: rgba(108, 92, 231, 0.2); border: none;">
+                        <h5 class="text-white mb-0">
+                            <i class="fas fa-shipping-fast"></i> Adresse de livraison
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-white">Adresse ligne 1 *</label>
+                                <input type="text" class="form-control" name="address_line1" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-white">Adresse ligne 2</label>
+                                <input type="text" class="form-control" name="address_line2">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white">Ville *</label>
+                                <input type="text" class="form-control" name="city" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white">Région/État</label>
+                                <input type="text" class="form-control" name="state">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white">Code postal</label>
+                                <input type="text" class="form-control" name="postal_code">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-white">Pays *</label>
+                                <select class="form-select" name="country" required>
+                                    <option value="SN" selected>Sénégal</option>
+                                    <option value="CI">Côte d'Ivoire</option>
+                                    <option value="ML">Mali</option>
+                                    <option value="BF">Burkina Faso</option>
+                                    <option value="GN">Guinée</option>
+                                    <option value="NE">Niger</option>
+                                    <option value="TG">Togo</option>
+                                    <option value="BJ">Bénin</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="card shadow-lg border-0" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                    <div class="card-header" style="background: rgba(108, 92, 231, 0.2); border: none;">
+                        <h5 class="text-white mb-0">
+                            <i class="fas fa-credit-card"></i> Mode de paiement
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" style="background: rgba(23, 162, 184, 0.2); border: 1px solid rgba(23, 162, 184, 0.3);">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="text-white">Paiement sécurisé avec CinetPay - Mobile Money, Cartes bancaires, Virements</span>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="p-3 rounded" style="background: rgba(255,255,255,0.1);">
+                                    <i class="fas fa-mobile-alt fa-2x text-success mb-2"></i>
+                                    <p class="text-white small mb-0">Mobile Money</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="p-3 rounded" style="background: rgba(255,255,255,0.1);">
+                                    <i class="fas fa-credit-card fa-2x text-primary mb-2"></i>
+                                    <p class="text-white small mb-0">Carte bancaire</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="p-3 rounded" style="background: rgba(255,255,255,0.1);">
+                                    <i class="fas fa-university fa-2x text-warning mb-2"></i>
+                                    <p class="text-white small mb-0">Virement</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="p-3 rounded" style="background: rgba(255,255,255,0.1);">
+                                    <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                                    <p class="text-white small mb-0">100% Sécurisé</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card shadow-lg border-0" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                    <div class="card-header" style="background: rgba(108, 92, 231, 0.2); border: none;">
+                        <h5 class="text-white mb-0">
+                            <i class="fas fa-receipt"></i> Résumé de commande
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Cart Items -->
+                        <div class="mb-4">
+                            {% for item in cart.items.all %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    {% if item.product.featured_image %}
+                                    <img src="{{ item.product.featured_image.url }}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="d-flex align-items-center justify-content-center rounded" style="width: 50px; height: 50px; background: linear-gradient(45deg, #6c5ce7, #a29bfe);">
+                                        <i class="fas fa-image text-white"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-white mb-0 small">{{ item.product.name }}</h6>
+                                    {% if item.variant %}
+                                    <small class="text-white-50">{{ item.variant.name }}</small>
+                                    {% endif %}
+                                    <div class="text-warning small">{{ item.quantity }}x {{ item.price }} FCFA</div>
+                                </div>
+                                <div class="text-warning fw-bold">{{ item.get_total_price }} FCFA</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <hr class="border-secondary">
+
+                        <!-- Totals -->
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-white">Sous-total:</span>
+                            <span class="text-warning">{{ cart.get_total_price }} FCFA</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-white">Livraison:</span>
+                            <span class="text-success">Gratuite</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-white">TVA:</span>
+                            <span class="text-white-50">Incluse</span>
+                        </div>
+                        
+                        <hr class="border-secondary">
+                        
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="text-white h5">Total:</span>
+                            <span class="text-warning h4 fw-bold">{{ cart.get_total_price }} FCFA</span>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label text-white small" for="termsCheck">
+                                J'accepte les <a href="#" class="text-warning">conditions générales</a> et la <a href="#" class="text-warning">politique de confidentialité</a>
+                            </label>
+                        </div>
+
+                        <!-- Place Order Button -->
+                        <button type="submit" class="btn btn-lg w-100 mb-3" style="background: linear-gradient(45deg, #ff6b6b, #ee5a52); color: white; border: none; font-family: 'Russo One', sans-serif;">
+                            <i class="fas fa-lock me-2"></i>
+                            PASSER COMMANDE
+                        </button>
+
+                        <div class="text-center">
+                            <small class="text-white-50">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Paiement 100% sécurisé avec CinetPay
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+<style>
+.form-control:focus, .form-select:focus {
+    border-color: #6c5ce7;
+    box-shadow: 0 0 0 0.2rem rgba(108, 92, 231, 0.25);
+}
+
+.btn:hover {
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkoutForm = document.getElementById('checkoutForm');
+    
+    checkoutForm.addEventListener('submit', function(e) {
+        const termsCheck = document.getElementById('termsCheck');
+        
+        if (!termsCheck.checked) {
+            e.preventDefault();
+            alert('Veuillez accepter les conditions générales pour continuer');
+            return;
+        }
+        
+        // Add loading state to submit button
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>TRAITEMENT...';
+        submitBtn.disabled = true;
+        
+        // Form will submit normally to Django view
+    });
+});
+</script>
+{% endblock %}

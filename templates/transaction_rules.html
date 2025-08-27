@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="rules-container">
+    <div class="rules-card">
+        <h1 class="rules-title">Règles de Transaction</h1>
+        
+        <div class="rules-section">
+            <h2><i class="fas fa-shield-alt"></i> Sécurité et Protection</h2>
+            <div class="rules-content">
+                <div class="rule-item">
+                    <h3>🔒 Système d'Escrow</h3>
+                    <p>Votre argent est protégé par notre système d'escrow. L'argent est mis en attente jusqu'à la confirmation de réception par l'acheteur.</p>
+                </div>
+                
+                <div class="rule-item">
+                    <h3>⏰ Période de Sécurité</h3>
+                    <p>Une période de sécurité de 24h est accordée pour vérifier le compte et s'assurer qu'il correspond à la description.</p>
+                </div>
+                
+                <div class="rule-item">
+                    <h3>✅ Confirmation de Réception</h3>
+                    <p>L'acheteur doit confirmer la réception du compte pour que le vendeur reçoive son paiement.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="rules-section">
+            <h2><i class="fas fa-users"></i> Rôles et Responsabilités</h2>
+            <div class="rules-content">
+                <div class="rule-item">
+                    <h3>👤 Vendeur</h3>
+                    <ul>
+                        <li>Doit fournir des informations de paiement valides avant de vendre</li>
+                        <li>Responsable de la véracité des informations du compte</li>
+                        <li>Doit transférer le compte dans les délais convenus</li>
+                        <li>Peut supprimer son annonce si aucune transaction n'est en cours</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-item">
+                    <h3>🛒 Acheteur</h3>
+                    <ul>
+                        <li>Doit vérifier le compte dans les 24h suivant l'achat</li>
+                        <li>Responsable de confirmer la réception du compte</li>
+                        <li>Peut ouvrir un litige en cas de problème</li>
+                        <li>Doit communiquer avec le vendeur via le chat intégré</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="rules-section">
+            <h2><i class="fas fa-exclamation-triangle"></i> Gestion des Litiges</h2>
+            <div class="rules-content">
+                <div class="rule-item">
+                    <h3>🚨 Ouverture d'un Litige</h3>
+                    <p>En cas de problème, l'acheteur peut ouvrir un litige dans les 24h suivant l'achat. Notre équipe examinera la situation.</p>
+                </div>
+                
+                <div class="rule-item">
+                    <h3>⚖️ Résolution</h3>
+                    <p>Notre équipe analysera les preuves et décidera du remboursement ou de la libération des fonds selon le cas.</p>
+                </div>
+                
+                <div class="rule-item">
+                    <h3>💬 Communication</h3>
+                    <p>Toute communication doit se faire via le chat intégré pour des raisons de sécurité et de traçabilité.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="rules-section">
+            <h2><i class="fas fa-credit-card"></i> Paiements</h2>
+            <div class="rules-content">
+                <div class="rule-item">
+                    <h3>💳 Moyens de Paiement</h3>
+                    <p>Nous acceptons les paiements via CinetPay (Mobile Money, Cartes bancaires, Virements).</p>
+                </div>
+                
+                <div class="rule-item">
+                    <h3>💰 Commission</h3>
+                    <p>Une commission de 10% est prélevée sur chaque transaction pour couvrir les frais de service et de sécurité.</p>
+                </div>
+                
+                <div class="rule-item">
+                    <h3>⏱️ Délais de Paiement</h3>
+                    <p>Le vendeur reçoit son paiement automatiquement après confirmation de réception par l'acheteur.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="rules-section">
+            <h2><i class="fas fa-ban"></i> Interdictions</h2>
+            <div class="rules-content">
+                <div class="rule-item">
+                    <h3>❌ Comportements Interdits</h3>
+                    <ul>
+                        <li>Vendre des comptes volés ou frauduleux</li>
+                        <li>Fournir de fausses informations sur les comptes</li>
+                        <li>Contourner le système de paiement</li>
+                        <li>Communiquer en dehors de la plateforme</li>
+                        <li>Utiliser plusieurs comptes pour frauder</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-item">
+                    <h3>🚫 Sanctions</h3>
+                    <p>Les utilisateurs qui ne respectent pas ces règles peuvent être suspendus ou bannis de la plateforme.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="rules-footer">
+            <p><strong>En utilisant notre plateforme, vous acceptez ces règles de transaction.</strong></p>
+            <p>Pour toute question, contactez notre support via le chat ou les notifications.</p>
+        </div>
+
+        <div class="rules-actions">
+            <a href="{% url 'index' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.rules-container {
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+}
+
+.rules-card {
+    max-width: 900px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 3rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rules-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    font-family: 'RussoOne', sans-serif;
+    color: var(--primary-color);
+    text-shadow: 0 0 15px var(--primary-color);
+}
+
+.rules-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rules-section h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rules-section h2 i {
+    font-size: 1.3rem;
+}
+
+.rules-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rule-item {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.rule-item h3 {
+    color: white;
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+    font-weight: 600;
+}
+
+.rule-item p {
+    color: #ccc;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.rule-item ul {
+    color: #ccc;
+    line-height: 1.6;
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.rule-item li {
+    margin-bottom: 0.5rem;
+}
+
+.rules-footer {
+    text-align: center;
+    margin: 3rem 0 2rem 0;
+    padding: 2rem;
+    background: rgba(108, 92, 231, 0.1);
+    border-radius: 15px;
+    border: 1px solid rgba(108, 92, 231, 0.2);
+}
+
+.rules-footer p {
+    color: #ccc;
+    margin: 0.5rem 0;
+}
+
+.rules-footer strong {
+    color: var(--primary-color);
+}
+
+.rules-actions {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+}
+
+@media (max-width: 768px) {
+    .rules-container {
+        padding: 1rem;
+    }
+    
+    .rules-card {
+        padding: 2rem;
+    }
+    
+    .rules-section {
+        padding: 1.5rem;
+    }
+    
+    .rules-title {
+        font-size: 2rem;
+    }
+}
+</style>
+
+{% endblock %} 

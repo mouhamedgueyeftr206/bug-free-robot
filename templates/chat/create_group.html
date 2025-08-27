@@ -1,0 +1,439 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Créer un groupe - BLIZZ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-group-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--dark-blue);
+        min-height: 100vh;
+    }
+
+    .create-group-card {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 0 15px var(--primary-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .create-group-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .create-group-header h1 {
+        color: var(--text-color);
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        text-shadow: 0 0 15px var(--primary-color);
+    }
+
+    .create-group-header p {
+        color: var(--text-color);
+        opacity: 0.8;
+        margin: 0;
+    }
+
+    .btn-back {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: var(--text-color);
+        border: 1px solid var(--primary-color);
+        padding: 10px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px var(--primary-color);
+        color: var(--text-color);
+        text-decoration: none;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-color);
+        font-size: 16px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 15px;
+        border: 1px solid var(--primary-color);
+        border-radius: 12px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: var(--dark-blue);
+        color: var(--text-color);
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+        font-family: inherit;
+    }
+
+    .avatar-upload {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+        border: 2px dashed var(--primary-color);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: rgba(108, 92, 231, 0.05);
+    }
+
+    .avatar-upload:hover {
+        border-color: var(--secondary-color);
+        background: rgba(108, 92, 231, 0.1);
+        box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    .avatar-preview {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+    }
+
+    .avatar-preview.default {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-color);
+        font-weight: bold;
+        font-size: 32px;
+    }
+
+    .avatar-info {
+        flex: 1;
+    }
+
+    .avatar-info h4 {
+        margin: 0 0 5px 0;
+        color: var(--text-color);
+        font-weight: 600;
+    }
+
+    .avatar-info p {
+        margin: 0;
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 14px;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 20px;
+    }
+
+    .form-row .form-group {
+        flex: 1;
+    }
+
+    .btn-create {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: var(--text-color);
+        border: 1px solid var(--primary-color);
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-create:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .form-help {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .character-count {
+        font-size: 12px;
+        color: #999;
+        text-align: right;
+        margin-top: 5px;
+    }
+
+    .character-count.warning {
+        color: #f39c12;
+    }
+
+    .character-count.error {
+        color: #e74c3c;
+    }
+
+    @media (max-width: 768px) {
+        .create-group-container {
+            padding: 10px;
+        }
+        
+        .create-group-card {
+            padding: 20px;
+        }
+        
+        .form-row {
+            flex-direction: column;
+        }
+        
+        .avatar-upload {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-group-container">
+    <a href="{% url 'group_list' %}" class="btn-back">
+        <i class="fas fa-arrow-left"></i>
+        Retour aux groupes
+    </a>
+
+    <div class="create-group-card">
+        <div class="create-group-header">
+            <h1>
+                <i class="fas fa-users"></i>
+                Créer un nouveau groupe
+            </h1>
+            <p>Rassemblez vos amis gamers dans un groupe de discussion</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="createGroupForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="name">Nom du groupe *</label>
+                <input type="text" 
+                       id="name" 
+                       name="name" 
+                       class="form-control" 
+                       placeholder="Ex: Team PUBG, Squad FreeFire..."
+                       required
+                       maxlength="50">
+                <div class="character-count" id="nameCount">0/50</div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" 
+                          name="description" 
+                          class="form-control" 
+                          placeholder="Décrivez votre groupe, ses objectifs, règles..."
+                          maxlength="500"></textarea>
+                <div class="character-count" id="descCount">0/500</div>
+                <div class="form-help">Optionnel - Aidez les membres à comprendre l'objectif du groupe</div>
+            </div>
+
+            <div class="form-group">
+                <label>Avatar du groupe</label>
+                <div class="avatar-upload" onclick="document.getElementById('avatar').click()">
+                    <div class="avatar-preview default" id="avatarPreview">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="avatar-info">
+                        <h4>Choisir une image</h4>
+                        <p>Cliquez pour sélectionner une image pour votre groupe (optionnel)</p>
+                    </div>
+                </div>
+                <input type="file" 
+                       id="avatar" 
+                       name="avatar" 
+                       class="file-input" 
+                       accept="image/*">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="max_members">Nombre maximum de membres</label>
+                    <input type="number" 
+                           id="max_members" 
+                           name="max_members" 
+                           class="form-control" 
+                           value="50" 
+                           min="2" 
+                           max="200">
+                    <div class="form-help">Entre 2 et 200 membres</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-create" id="submitBtn">
+                <i class="fas fa-plus"></i>
+                Créer le groupe
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const nameInput = document.getElementById('name');
+    const descInput = document.getElementById('description');
+    const avatarInput = document.getElementById('avatar');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const nameCount = document.getElementById('nameCount');
+    const descCount = document.getElementById('descCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('createGroupForm');
+    
+    // Compteur de caractères pour le nom
+    nameInput.addEventListener('input', function() {
+        const count = this.value.length;
+        nameCount.textContent = `${count}/50`;
+        
+        if (count > 40) {
+            nameCount.className = 'character-count warning';
+        } else if (count > 45) {
+            nameCount.className = 'character-count error';
+        } else {
+            nameCount.className = 'character-count';
+        }
+        
+        validateForm();
+    });
+    
+    // Compteur de caractères pour la description
+    descInput.addEventListener('input', function() {
+        const count = this.value.length;
+        descCount.textContent = `${count}/500`;
+        
+        if (count > 400) {
+            descCount.className = 'character-count warning';
+        } else if (count > 450) {
+            descCount.className = 'character-count error';
+        } else {
+            descCount.className = 'character-count';
+        }
+    });
+    
+    // Prévisualisation de l'avatar
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Vérifier la taille du fichier (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('L\'image est trop volumineuse. Taille maximum: 5MB');
+                this.value = '';
+                return;
+            }
+            
+            // Vérifier le type de fichier
+            if (!file.type.startsWith('image/')) {
+                alert('Veuillez sélectionner une image valide');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Remettre l'icône par défaut
+            avatarPreview.innerHTML = '<i class="fas fa-users"></i>';
+        }
+    });
+    
+    // Validation du formulaire
+    function validateForm() {
+        const name = nameInput.value.trim();
+        const isValid = name.length >= 2 && name.length <= 50;
+        
+        submitBtn.disabled = !isValid;
+        
+        if (!isValid && name.length > 0) {
+            nameInput.style.borderColor = '#e74c3c';
+        } else {
+            nameInput.style.borderColor = name.length > 0 ? '#27ae60' : '#e0e0e0';
+        }
+    }
+    
+    // Validation en temps réel
+    nameInput.addEventListener('input', validateForm);
+    
+    // Soumission du formulaire
+    form.addEventListener('submit', function(e) {
+        const name = nameInput.value.trim();
+        
+        if (name.length < 2) {
+            e.preventDefault();
+            alert('Le nom du groupe doit contenir au moins 2 caractères');
+            nameInput.focus();
+            return;
+        }
+        
+        if (name.length > 50) {
+            e.preventDefault();
+            alert('Le nom du groupe ne peut pas dépasser 50 caractères');
+            nameInput.focus();
+            return;
+        }
+        
+        // Désactiver le bouton pour éviter les doubles soumissions
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+    });
+    
+    // Validation initiale
+    validateForm();
+    
+    // Auto-focus sur le nom
+    nameInput.focus();
+</script>
+{% endblock %}

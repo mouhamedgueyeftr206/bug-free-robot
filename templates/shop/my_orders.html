@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mes Commandes - Boutique Gaming BLIZZ{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px 0;">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-white mb-3" style="font-family: 'Russo One', sans-serif;">
+                <i class="fas fa-list"></i> Mes Commandes
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="background: rgba(255,255,255,0.1);">
+                    <li class="breadcrumb-item"><a href="{% url 'shop_home' %}" class="text-white">Boutique</a></li>
+                    <li class="breadcrumb-item active text-white-50">Mes Commandes</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    {% if orders %}
+    <div class="row">
+        {% for order in orders %}
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-lg border-0" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: rgba(108, 92, 231, 0.2); border: none;">
+                    <div>
+                        <h6 class="text-white mb-0">Commande #{{ order.order_number }}</h6>
+                        <small class="text-white-50">{{ order.created_at|date:"d/m/Y à H:i" }}</small>
+                    </div>
+                    <span class="badge 
+                        {% if order.status == 'pending' %}bg-warning
+                        {% elif order.status == 'processing' %}bg-info
+                        {% elif order.status == 'shipped' %}bg-primary
+                        {% elif order.status == 'delivered' %}bg-success
+                        {% elif order.status == 'cancelled' %}bg-danger
+                        {% else %}bg-secondary{% endif %}">
+                        {% if order.status == 'pending' %}En attente
+                        {% elif order.status == 'processing' %}En cours
+                        {% elif order.status == 'shipped' %}Expédiée
+                        {% elif order.status == 'delivered' %}Livrée
+                        {% elif order.status == 'cancelled' %}Annulée
+                        {% else %}{{ order.status }}{% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <!-- Order Items Preview -->
+                    <div class="mb-3">
+                        {% for item in order.items.all|slice:":3" %}
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-3">
+                                {% if item.product.featured_image %}
+                                <img src="{{ item.product.featured_image.url }}" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                {% else %}
+                                <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background: linear-gradient(45deg, #6c5ce7, #a29bfe);">
+                                    <i class="fas fa-image text-white small"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <small class="text-white">{{ item.product_name }}</small>
+                                {% if item.variant %}
+                                <br><small class="text-white-50">{{ item.variant.name }}</small>
+                                {% endif %}
+                            </div>
+                            <small class="text-warning">{{ item.quantity }}x</small>
+                        </div>
+                        {% endfor %}
+                        {% if order.items.count > 3 %}
+                        <small class="text-white-50">... et {{ order.items.count|add:"-3" }} autre{{ order.items.count|add:"-3"|pluralize }} article{{ order.items.count|add:"-3"|pluralize }}</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-white">Total:</span>
+                        <span class="text-warning h6 mb-0">{{ order.total_amount }} FCFA</span>
+                    </div>
+
+                    <!-- Payment Status -->
+                    <div class="mb-3">
+                        <small class="text-white-50">Paiement: </small>
+                        <span class="badge 
+                            {% if order.payment_status == 'pending' %}bg-warning
+                            {% elif order.payment_status == 'paid' %}bg-success
+                            {% elif order.payment_status == 'failed' %}bg-danger
+                            {% elif order.payment_status == 'refunded' %}bg-info
+                            {% else %}bg-secondary{% endif %}">
+                            {% if order.payment_status == 'pending' %}En attente
+                            {% elif order.payment_status == 'paid' %}Payé
+                            {% elif order.payment_status == 'failed' %}Échec
+                            {% elif order.payment_status == 'refunded' %}Remboursé
+                            {% else %}{{ order.payment_status }}{% endif %}
+                        </span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'order_detail' order.id %}" class="btn btn-sm flex-grow-1" style="background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white; border: none;">
+                            <i class="fas fa-eye me-1"></i>
+                            Détails
+                        </a>
+                        {% if order.status == 'delivered' %}
+                        <button class="btn btn-sm btn-outline-light" onclick="alert('Fonctionnalité bientôt disponible')">
+                            <i class="fas fa-star me-1"></i>
+                            Avis
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- No Orders -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-box-open fa-5x text-white-50 mb-4"></i>
+                    <h3 class="text-white mb-3">Aucune commande</h3>
+                    <p class="text-white-50 mb-4">Vous n'avez pas encore passé de commande dans notre boutique</p>
+                    <a href="{% url 'shop_products' %}" class="btn btn-lg px-5" style="background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white; border: none; font-family: 'Russo One', sans-serif;">
+                        <i class="fas fa-shopping-bag me-2"></i>
+                        DÉCOUVRIR NOS PRODUITS
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3) !important;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}

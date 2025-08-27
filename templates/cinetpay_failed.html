@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="main-container">
+    <div class="failed-container glass-effect">
+        <div class="failed-icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        
+        <h1 class="failed-title">Paiement Échoué</h1>
+        
+        <div class="transaction-details">
+            <h3>Détails de la transaction</h3>
+            <div class="detail-item">
+                <span class="label">Compte:</span>
+                <span class="value">{{ transaction.post.title }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Montant:</span>
+                <span class="value price">{{ transaction.amount }} €</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Vendeur:</span>
+                <span class="value">{{ transaction.seller.username }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Date:</span>
+                <span class="value">{{ transaction.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+        </div>
+        
+        <div class="error-message">
+            <h3>Que s'est-il passé ?</h3>
+            <p>Le paiement n'a pas pu être traité. Cela peut être dû à :</p>
+            <ul>
+                <li>Fonds insuffisants sur votre compte</li>
+                <li>Problème temporaire avec le service de paiement</li>
+                <li>Informations de paiement incorrectes</li>
+                <li>Transaction annulée</li>
+            </ul>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{% url 'initiate_cinetpay_payment' transaction.id %}" class="btn-primary">
+                <i class="fas fa-redo"></i>
+                Réessayer le paiement
+            </a>
+            <a href="{% url 'transaction_detail' transaction.id %}" class="btn-secondary">
+                <i class="fas fa-comments"></i>
+                Retour à la transaction
+            </a>
+            <a href="{% url 'index' %}" class="btn-tertiary">
+                <i class="fas fa-home"></i>
+                Retour à l'accueil
+            </a>
+        </div>
+        
+        <div class="support-notice">
+            <i class="fas fa-headset"></i>
+            <div>
+                <h4>Besoin d'aide ?</h4>
+                <p>Si le problème persiste, contactez notre support client. Nous sommes là pour vous aider.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .main-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .failed-container {
+        text-align: center;
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        border: 1px solid #e74c3c;
+    }
+    
+    .failed-icon {
+        font-size: 5rem;
+        color: #e74c3c;
+        margin-bottom: 1rem;
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .failed-title {
+        color: #e74c3c;
+        font-family: 'RussoOne', sans-serif;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 0 0 15px #e74c3c;
+    }
+    
+    .transaction-details {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+    
+    .transaction-details h3 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .label {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: bold;
+    }
+    
+    .value {
+        color: white;
+    }
+    
+    .value.price {
+        color: #e74c3c;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .error-message {
+        background: rgba(231, 76, 60, 0.1);
+        border: 1px solid #e74c3c;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+    
+    .error-message h3 {
+        color: #e74c3c;
+        margin-bottom: 1rem;
+    }
+    
+    .error-message p {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 1rem;
+    }
+    
+    .error-message ul {
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+    
+    .error-message li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-primary, .btn-secondary, .btn-tertiary {
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        min-width: 200px;
+        justify-content: center;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    .btn-tertiary {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-primary:hover, .btn-secondary:hover, .btn-tertiary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-primary:hover {
+        background: white;
+        color: var(--primary-color);
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-tertiary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    .support-notice {
+        background: rgba(52, 152, 219, 0.1);
+        border: 1px solid #3498db;
+        border-radius: 10px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-align: left;
+    }
+    
+    .support-notice i {
+        color: #3498db;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .support-notice h4 {
+        color: #3498db;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .support-notice p {
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+    }
+    
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+    
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .support-notice {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %} 

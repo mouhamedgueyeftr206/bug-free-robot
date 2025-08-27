@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Paiement - Commande #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    @font-face {
+        font-family: 'Halo';
+        src: url('{% static "fonts/halo.ttf" %}') format('truetype');
+    }
+    
+    @font-face {
+        font-family: 'RussoOne';
+        src: url('{% static "fonts/RussoOne-Regular.ttf" %}') format('truetype');
+    }
+
+    :root {
+        --primary-color: #6c5ce7;
+        --secondary-color: #a29bfe;
+        --accent-color: #fd79a8;
+        --dark-bg: #0f172a;
+        --card-bg: rgba(15, 23, 41, 0.8);
+    }
+
+    body {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        min-height: 100vh;
+        font-family: 'RussoOne', sans-serif;
+        color: white;
+    }
+
+    .payment-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .payment-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(108, 92, 231, 0.3);
+        overflow: hidden;
+    }
+
+    .payment-header {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .payment-header h1 {
+        font-family: 'Halo', sans-serif;
+        font-size: 2.5rem;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .order-summary {
+        background: rgba(255,255,255,0.05);
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border-radius: 15px;
+        border: 1px solid rgba(108, 92, 231, 0.3);
+    }
+
+    .order-summary h3 {
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .order-item:last-child {
+        border-bottom: none;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: var(--accent-color);
+    }
+
+    .payment-form {
+        padding: 2rem;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .form-section h4 {
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--secondary-color);
+        font-weight: bold;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(15, 23, 41, 0.8);
+        border: 1px solid var(--primary-color);
+        border-radius: 10px;
+        color: white;
+        font-family: 'RussoOne', sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 10px rgba(253, 121, 168, 0.3);
+    }
+
+    .payment-btn {
+        background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        font-family: 'RussoOne', sans-serif;
+        font-size: 1.2rem;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .payment-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(108, 92, 231, 0.4);
+    }
+
+    .payment-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .security-info {
+        background: rgba(253, 121, 168, 0.1);
+        border: 1px solid var(--accent-color);
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+        text-align: center;
+    }
+
+    .security-info i {
+        color: var(--accent-color);
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .payment-header h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-header">
+            <h1><i class="fas fa-credit-card"></i> PAIEMENT SÉCURISÉ</h1>
+            <p>Commande #{{ order.order_number }}</p>
+        </div>
+
+        <div class="payment-form">
+            <!-- Résumé de commande -->
+            <div class="order-summary">
+                <h3><i class="fas fa-receipt"></i> Résumé de votre commande</h3>
+                {% for item in order.items.all %}
+                <div class="order-item">
+                    <span>{{ item.quantity }}x {{ item.product_name }}</span>
+                    <span>{{ item.total_price }} FCFA</span>
+                </div>
+                {% endfor %}
+                <div class="order-item">
+                    <span>Livraison</span>
+                    <span>{{ order.shipping_cost }} FCFA</span>
+                </div>
+                <div class="order-item">
+                    <span><strong>TOTAL</strong></span>
+                    <span><strong>{{ order.total_amount }} FCFA</strong></span>
+                </div>
+            </div>
+
+            <!-- Informations de sécurité -->
+            <div class="security-info">
+                <i class="fas fa-shield-alt"></i>
+                <strong>Paiement 100% sécurisé avec CinetPay</strong><br>
+                Vos données bancaires sont protégées par un cryptage SSL
+            </div>
+
+            <!-- Formulaire de paiement -->
+            <form id="paymentForm">
+                {% csrf_token %}
+                
+                <div class="form-section">
+                    <h4><i class="fas fa-user"></i> Informations personnelles</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer_name">Prénom *</label>
+                            <input type="text" id="customer_name" name="customer_name" class="form-control" 
+                                   value="{% if user_profile %}{{ user_profile.user.first_name }}{% endif %}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer_surname">Nom *</label>
+                            <input type="text" id="customer_surname" name="customer_surname" class="form-control" 
+                                   value="{% if user_profile %}{{ user_profile.user.last_name }}{% endif %}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer_email">Email *</label>
+                            <input type="email" id="customer_email" name="customer_email" class="form-control" 
+                                   value="{{ user.email }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer_phone_number">Téléphone *</label>
+                            <input type="tel" id="customer_phone_number" name="customer_phone_number" class="form-control" 
+                                   value="{% if user_profile %}{{ user_profile.phone }}{% endif %}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Adresse de facturation</h4>
+                    <div class="form-group">
+                        <label for="customer_address">Adresse *</label>
+                        <input type="text" id="customer_address" name="customer_address" class="form-control" 
+                               value="{{ order.shipping_address_line1 }}" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer_city">Ville *</label>
+                            <input type="text" id="customer_city" name="customer_city" class="form-control" 
+                                   value="{{ order.shipping_city }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer_state">Région/État *</label>
+                            <input type="text" id="customer_state" name="customer_state" class="form-control" 
+                                   value="{{ order.shipping_state }}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer_country">Pays *</label>
+                            <select id="customer_country" name="customer_country" class="form-control" required>
+                                <option value="CI" {% if order.shipping_country == 'CI' %}selected{% endif %}>Côte d'Ivoire</option>
+                                <option value="SN" {% if order.shipping_country == 'SN' %}selected{% endif %}>Sénégal</option>
+                                <option value="BF" {% if order.shipping_country == 'BF' %}selected{% endif %}>Burkina Faso</option>
+                                <option value="ML" {% if order.shipping_country == 'ML' %}selected{% endif %}>Mali</option>
+                                <option value="GN" {% if order.shipping_country == 'GN' %}selected{% endif %}>Guinée</option>
+                                <option value="BJ" {% if order.shipping_country == 'BJ' %}selected{% endif %}>Bénin</option>
+                                <option value="TG" {% if order.shipping_country == 'TG' %}selected{% endif %}>Togo</option>
+                                <option value="NE" {% if order.shipping_country == 'NE' %}selected{% endif %}>Niger</option>
+                                <option value="CM" {% if order.shipping_country == 'CM' %}selected{% endif %}>Cameroun</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer_zip_code">Code postal *</label>
+                            <input type="text" id="customer_zip_code" name="customer_zip_code" class="form-control" 
+                                   value="{{ order.shipping_postal_code }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="payBtn" class="payment-btn">
+                    <i class="fas fa-lock"></i> PAYER {{ order.total_amount }} FCFA
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const payBtn = document.getElementById('payBtn');
+    const originalText = payBtn.innerHTML;
+    
+    // Désactiver le bouton et afficher le loading
+    payBtn.disabled = true;
+    payBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> TRAITEMENT...';
+    
+    // Préparer les données du formulaire
+    const formData = new FormData(this);
+    
+    // Envoyer la requête AJAX
+    fetch('{% url "initiate_shop_payment" order.id %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            , 'X-Requested-With': 'XMLHttpRequest'
+            , 'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Rediriger vers la page de paiement CinetPay
+            window.location.href = data.redirect_url || data.payment_url;
+        } else {
+            alert('Erreur: ' + data.error);
+            payBtn.disabled = false;
+            payBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue. Veuillez réessayer.');
+        payBtn.disabled = false;
+        payBtn.innerHTML = originalText;
+    });
+});
+</script>
+{% endblock %}

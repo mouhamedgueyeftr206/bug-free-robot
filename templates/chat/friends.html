@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Amis - BLIZZ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .friends-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--dark-blue);
+        min-height: 100vh;
+    }
+    
+    .friends-header {
+        color: var(--text-color);
+        text-shadow: 0 0 15px var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .friends-section {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 15px var(--primary-color);
+    }
+    
+    .friend-item {
+        margin: 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-color);
+    }
+    
+    .btn-chat {
+        padding: 6px 12px;
+        border-radius: 25px;
+        color: var(--text-color);
+        text-decoration: none;
+        border: 1px solid var(--primary-color);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-discuss {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .btn-accept {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+    }
+    
+    .btn-decline {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+    }
+    
+    .btn-cancel {
+        background: linear-gradient(45deg, #f1c40f, #f39c12);
+        color: var(--dark-blue);
+    }
+    
+    .btn-chat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 10px var(--primary-color);
+        text-decoration: none;
+        color: var(--text-color);
+    }
+    
+    .section-title {
+        color: var(--text-color);
+        text-shadow: 0 0 15px var(--primary-color);
+        margin-bottom: 15px;
+    }
+    
+    .no-items {
+        color: var(--text-color);
+        opacity: 0.8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="friends-container">
+  <h1 class="friends-header">Mes amis</h1>
+  <div class="friends-section">
+    {% if friends %}
+      <ul style="list-style: none; padding: 0;">
+        {% for friend in friends %}
+          <li class="friend-item">
+            <a href="{% url 'private_chat' friend.id %}" class="btn-chat btn-discuss">Discuter</a>
+            <span>@{{ friend.username }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="no-items">Aucun ami pour l'instant.</p>
+    {% endif %}
+  </div>
+
+  <h2 class="section-title">Demandes reçues</h2>
+  <div class="friends-section">
+    {% if pending_received %}
+      {% for req in pending_received %}
+        <div class="friend-item">
+          <span>@{{ req.from_user.username }}</span>
+          <a href="{% url 'accept_friend_request' req.id %}" class="btn-chat btn-accept">Accepter</a>
+          <a href="{% url 'decline_friend_request' req.id %}" class="btn-chat btn-decline">Refuser</a>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="no-items">Aucune demande reçue.</p>
+    {% endif %}
+  </div>
+
+  <h2 class="section-title">Demandes envoyées</h2>
+  <div class="friends-section">
+    {% if pending_sent %}
+      {% for req in pending_sent %}
+        <div class="friend-item">
+          <span>@{{ req.to_user.username }}</span>
+          <a href="{% url 'cancel_friend_request' req.id %}" class="btn-chat btn-cancel">Annuler</a>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="no-items">Aucune demande envoyée.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+

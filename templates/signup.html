@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Inscription</h2>
+        {% for message in messages %}
+            <div class="error-message">{{message}}</div>
+        {% endfor %}
+        
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">
+                    <i class="fas fa-user"></i>
+                    Nom d'utilisateur
+                </label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">
+                    <i class="fas fa-envelope"></i>
+                    Email
+                </label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">
+                    <i class="fas fa-lock"></i>
+                    Mot de passe
+                </label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm-password">
+                    <i class="fas fa-lock"></i>
+                    Confirmer le mot de passe
+                </label>
+                <input type="password" id="confirm-password" name="password2" required>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <span>J'accepte les <a href="/terms" class="inline-link">Conditions d'utilisation</a> et la 
+                    <a href="/privacy" class="inline-link">Politique de confidentialité</a></span>
+                </label>
+            </div>
+            
+            <button type="submit" class="auth-button" id="signupBtn">
+                <i class="fas fa-user-plus"></i>
+                S'inscrire
+            </button>
+        </form>
+        
+        <div class="auth-links">
+            <a href="{% url 'signin' %}" class="auth-link">
+                <i class="fas fa-sign-in-alt"></i>
+                Déjà un compte ? Se connecter
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-card {
+    background: rgba(15, 23, 41, 0.95);
+    border-radius: 15px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 30px rgba(108, 92, 231, 0.2);
+}
+
+.auth-card h2 {
+    text-align: center;
+    color: var(--primary-color);
+    font-family: 'RussoOne', sans-serif;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 15px var(--primary-color);
+}
+
+.error-message {
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid #ff0000;
+    color: #ff0000;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-group input:not([type="checkbox"]) {
+    width: 100%;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    box-shadow: 0 0 15px var(--primary-color);
+}
+
+.checkbox-group {
+    margin-top: 1rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-top: 0.3rem;
+}
+
+.inline-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.inline-link:hover {
+    text-shadow: 0 0 10px var(--primary-color);
+}
+
+.auth-button {
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px var(--primary-color);
+}
+
+.auth-links {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+}
+
+.auth-link {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.auth-link:hover {
+    color: var(--primary-color);
+    transform: translateX(5px);
+}
+</style>
+{% endblock %}

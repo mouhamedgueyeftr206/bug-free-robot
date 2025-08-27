@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - Boutique Gaming BLIZZ{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px 0;">
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-white mb-3" style="font-family: 'Russo One', sans-serif;">
+                <i class="fas fa-th-large"></i> {{ category.name }}
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="background: rgba(255,255,255,0.1);">
+                    <li class="breadcrumb-item"><a href="{% url 'shop_home' %}" class="text-white">Boutique</a></li>
+                    <li class="breadcrumb-item active text-white-50">{{ category.name }}</li>
+                </ol>
+            </nav>
+            {% if category.description %}
+            <p class="text-white-50">{{ category.description }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Subcategories -->
+    {% if subcategories %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="text-white mb-3">Sous-catégories</h3>
+        </div>
+        {% for subcategory in subcategories %}
+        <div class="col-lg-3 col-md-6 mb-4">
+            <a href="{% url 'shop_category' subcategory.slug %}" class="text-decoration-none">
+                <div class="card h-100 shadow-lg border-0" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); transition: all 0.3s ease;">
+                    {% if subcategory.image %}
+                    <img src="{{ subcategory.image.url }}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 150px; background: linear-gradient(45deg, #6c5ce7, #a29bfe);">
+                        <i class="fas fa-folder fa-3x text-white"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body text-center">
+                        <h6 class="card-title text-white mb-0">{{ subcategory.name }}</h6>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-lg border-0" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                <div class="card-header" style="background: rgba(108, 92, 231, 0.2); border: none;">
+                    <h5 class="text-white mb-0"><i class="fas fa-filter"></i> Filtres</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label text-white">Prix</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="price_min" value="{{ price_min }}" placeholder="Min">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="price_max" value="{{ price_max }}" placeholder="Max">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sort -->
+                        <div class="mb-3">
+                            <label class="form-label text-white">Trier par</label>
+                            <select class="form-select" name="sort">
+                                <option value="created_at" {% if current_sort == 'created_at' %}selected{% endif %}>Plus récents</option>
+                                <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Prix croissant</option>
+                                <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Prix décroissant</option>
+                                <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Nom A-Z</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn w-100" style="background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white; border: none;">
+                            <i class="fas fa-search"></i> Appliquer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            {% if products %}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="text-white">{{ products.paginator.count }} produit{{ products.paginator.count|pluralize }} trouvé{{ products.paginator.count|pluralize }}</span>
+            </div>
+
+            <div class="row">
+                {% for product in products %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-lg border-0" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); transition: all 0.3s ease;">
+                        <a href="{% url 'shop_product_detail' product.slug %}" class="text-decoration-none">
+                            {% if product.featured_image %}
+                            <img src="{{ product.featured_image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background: linear-gradient(45deg, #6c5ce7, #a29bfe);">
+                                <i class="fas fa-image fa-3x text-white"></i>
+                            </div>
+                            {% endif %}
+                        </a>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title text-white mb-2">{{ product.name }}</h6>
+                            <p class="card-text text-white-50 small flex-grow-1">{{ product.short_description|truncatewords:15 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <span class="h5 text-warning mb-0">{{ product.price }} FCFA</span>
+                                <div>
+                                    <a href="{% url 'shop_product_detail' product.slug %}" class="btn btn-sm me-2" style="background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white; border: none;">
+                                        Voir
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-light add-to-cart-btn" 
+                                            data-product-id="{{ product.id }}" 
+                                            data-product-name="{{ product.name }}">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if products.has_other_pages %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <nav aria-label="Products pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if products.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.previous_page_number }}{% if price_min %}&price_min={{ price_min }}{% endif %}{% if price_max %}&price_max={{ price_max }}{% endif %}&sort={{ current_sort }}">
+                                    Précédent
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in products.paginator.page_range %}
+                            {% if products.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if price_min %}&price_min={{ price_min }}{% endif %}{% if price_max %}&price_max={{ price_max }}{% endif %}&sort={{ current_sort }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if products.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.next_page_number }}{% if price_min %}&price_min={{ price_min }}{% endif %}{% if price_max %}&price_max={{ price_max }}{% endif %}&sort={{ current_sort }}">
+                                    Suivant
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="text-center">
+                <div class="card shadow-lg border-0" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                    <div class="card-body py-5">
+                        <i class="fas fa-search fa-4x text-white-50 mb-3"></i>
+                        <h4 class="text-white">Aucun produit dans cette catégorie</h4>
+                        <p class="text-white-50">Revenez bientôt pour découvrir nos nouveautés</p>
+                        <a href="{% url 'shop_products' %}" class="btn" style="background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white; border: none;">
+                            Voir tous les produits
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+.page-link {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+}
+
+.page-link:hover {
+    background: rgba(108, 92, 231, 0.3);
+    color: white;
+}
+
+.page-item.active .page-link {
+    background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+    border-color: #6c5ce7;
+}
+</style>
+
+<script>
+// Add to cart functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+    
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            const productName = this.getAttribute('data-product-name');
+            
+            // Add loading state
+            const originalContent = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            this.disabled = true;
+            
+            // Send AJAX request
+            fetch('{% url "add_to_cart" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: `product_id=${productId}&quantity=1`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    this.innerHTML = '<i class="fas fa-check"></i>';
+                    this.classList.remove('btn-outline-light');
+                    this.classList.add('btn-success');
+                    
+                    // Reset after 2 seconds
+                    setTimeout(() => {
+                        this.innerHTML = originalContent;
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-outline-light');
+                        this.disabled = false;
+                    }, 2000);
+                } else {
+                    alert('Erreur: ' + data.message);
+                    this.innerHTML = originalContent;
+                    this.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue');
+                this.innerHTML = originalContent;
+                this.disabled = false;
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

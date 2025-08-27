@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Commande confirmée - Boutique Gaming BLIZZ{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px 0;">
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Message -->
+            <div class="card shadow-lg border-0 mb-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-check-circle fa-5x text-success mb-4"></i>
+                    <h1 class="text-white mb-3" style="font-family: 'Russo One', sans-serif;">
+                        Commande Confirmée !
+                    </h1>
+                    <p class="text-white-50 mb-4">
+                        Merci pour votre commande. Nous avons bien reçu votre paiement et votre commande est en cours de traitement.
+                    </p>
+                    <div class="alert alert-success" style="background: rgba(40, 167, 69, 0.2); border: 1px solid rgba(40, 167, 69, 0.3);">
+                        <h5 class="text-success mb-2">
+                            <i class="fas fa-receipt me-2"></i>
+                            Numéro de commande: <strong>{{ order.order_number }}</strong>
+                        </h5>
+                        <p class="text-white mb-0">Conservez ce numéro pour le suivi de votre commande</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="card shadow-lg border-0 mb-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                <div class="card-header" style="background: rgba(108, 92, 231, 0.2); border: none;">
+                    <h5 class="text-white mb-0">
+                        <i class="fas fa-box"></i> Détails de la commande
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-white">Informations de livraison</h6>
+                            <p class="text-white-50 mb-1">{{ order.customer_first_name }} {{ order.customer_last_name }}</p>
+                            <p class="text-white-50 mb-1">{{ order.shipping_address_line1 }}</p>
+                            {% if order.shipping_address_line2 %}
+                            <p class="text-white-50 mb-1">{{ order.shipping_address_line2 }}</p>
+                            {% endif %}
+                            <p class="text-white-50 mb-1">{{ order.shipping_city }}, {{ order.shipping_state }}</p>
+                            <p class="text-white-50 mb-1">{{ order.shipping_postal_code }} {{ order.shipping_country }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-white">Contact</h6>
+                            <p class="text-white-50 mb-1">
+                                <i class="fas fa-envelope me-2"></i>{{ order.customer_email }}
+                            </p>
+                            <p class="text-white-50 mb-1">
+                                <i class="fas fa-phone me-2"></i>{{ order.customer_phone }}
+                            </p>
+                            <p class="text-white-50 mb-1">
+                                <i class="fas fa-calendar me-2"></i>{{ order.created_at|date:"d/m/Y à H:i" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <h6 class="text-white mb-3">Articles commandés</h6>
+                    {% for item in order.items.all %}
+                    <div class="d-flex align-items-center mb-3 p-3 rounded" style="background: rgba(255,255,255,0.05);">
+                        <div class="me-3">
+                            {% if item.product.featured_image %}
+                            <img src="{{ item.product.featured_image.url }}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 60px; height: 60px; background: linear-gradient(45deg, #6c5ce7, #a29bfe);">
+                                <i class="fas fa-image text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="text-white mb-1">{{ item.product_name }}</h6>
+                            {% if item.variant %}
+                            <small class="text-white-50">Variante: {{ item.variant.name }}</small>
+                            {% endif %}
+                            <div class="text-warning">{{ item.quantity }}x {{ item.product_price }} FCFA</div>
+                        </div>
+                        <div class="text-warning fw-bold">{{ item.total_price }} FCFA</div>
+                    </div>
+                    {% endfor %}
+
+                    <hr class="border-secondary">
+
+                    <!-- Order Total -->
+                    <div class="row">
+                        <div class="col-md-6 offset-md-6">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-white">Sous-total:</span>
+                                <span class="text-warning">{{ order.subtotal }} FCFA</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-white">Livraison:</span>
+                                <span class="text-success">Gratuite</span>
+                            </div>
+                            <hr class="border-secondary">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-white h5">Total:</span>
+                                <span class="text-warning h4 fw-bold">{{ order.total_amount }} FCFA</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="card shadow-lg border-0 mb-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                <div class="card-header" style="background: rgba(108, 92, 231, 0.2); border: none;">
+                    <h5 class="text-white mb-0">
+                        <i class="fas fa-clock"></i> Prochaines étapes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-cogs fa-3x text-info mb-3"></i>
+                            <h6 class="text-white">1. Traitement</h6>
+                            <p class="text-white-50 small">Votre commande est en cours de préparation</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-shipping-fast fa-3x text-warning mb-3"></i>
+                            <h6 class="text-white">2. Expédition</h6>
+                            <p class="text-white-50 small">Nous vous enverrons un email de suivi</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <i class="fas fa-home fa-3x text-success mb-3"></i>
+                            <h6 class="text-white">3. Livraison</h6>
+                            <p class="text-white-50 small">Réception sous 3-7 jours ouvrés</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <a href="{% url 'my_orders' %}" class="btn btn-lg me-3 mb-3" style="background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white; border: none; font-family: 'Russo One', sans-serif;">
+                    <i class="fas fa-list me-2"></i>
+                    MES COMMANDES
+                </a>
+                <a href="{% url 'shop_home' %}" class="btn btn-lg btn-outline-light mb-3">
+                    <i class="fas fa-shopping-bag me-2"></i>
+                    CONTINUER MES ACHATS
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.btn:hover {
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}

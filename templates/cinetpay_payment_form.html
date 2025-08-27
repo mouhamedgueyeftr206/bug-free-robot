@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="main-container">
+    <div class="payment-form-container">
+        <div class="payment-header">
+            <h1 class="payment-title">
+                <i class="fas fa-credit-card"></i>
+                Paiement Sécurisé CinetPay
+            </h1>
+            <div class="transaction-summary glass-effect">
+                <h3>Résumé de la transaction</h3>
+                <div class="summary-item">
+                    <span class="label">Compte:</span>
+                    <span class="value">{{ transaction.post.title }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Prix:</span>
+                    <span class="value price">{{ transaction.amount }} €</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Vendeur:</span>
+                    <span class="value">{{ transaction.seller.username }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="payment-form glass-effect" id="cinetpay-form">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i>
+                    Informations personnelles
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer_name">Prénom *</label>
+                        <input type="text" id="customer_name" name="customer_name" required 
+                               value="{{ user_profile.user.first_name|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_surname">Nom *</label>
+                        <input type="text" id="customer_surname" name="customer_surname" required 
+                               value="{{ user_profile.user.last_name|default:'' }}">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer_email">Email *</label>
+                        <input type="email" id="customer_email" name="customer_email" required 
+                               value="{{ user_profile.user.email }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_phone_number">Téléphone *</label>
+                        <input type="tel" id="customer_phone_number" name="customer_phone_number" required 
+                               placeholder="+225070000000">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Adresse de facturation
+                </h3>
+                
+                <div class="form-group">
+                    <label for="customer_address">Adresse *</label>
+                    <input type="text" id="customer_address" name="customer_address" required 
+                           placeholder="123 Rue de la Paix">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer_city">Ville *</label>
+                        <input type="text" id="customer_city" name="customer_city" required 
+                               placeholder="Abidjan">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_zip_code">Code postal *</label>
+                        <input type="text" id="customer_zip_code" name="customer_zip_code" required 
+                               placeholder="00000">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer_country">Pays *</label>
+                        <select id="customer_country" name="customer_country" required>
+                            <option value="">Sélectionnez un pays</option>
+                            <option value="CI">Côte d'Ivoire</option>
+                            <option value="SN">Sénégal</option>
+                            <option value="BF">Burkina Faso</option>
+                            <option value="ML">Mali</option>
+                            <option value="NE">Niger</option>
+                            <option value="TG">Togo</option>
+                            <option value="BJ">Bénin</option>
+                            <option value="GN">Guinée</option>
+                            <option value="CM">Cameroun</option>
+                            <option value="CD">RD Congo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_state">État/Région *</label>
+                        <input type="text" id="customer_state" name="customer_state" required 
+                               placeholder="CI">
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <h3 class="section-title">
+                    <i class="fas fa-mobile-alt"></i>
+                    Moyens de paiement acceptés
+                </h3>
+                <div class="payment-icons">
+                    <div class="payment-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Mobile Money</span>
+                    </div>
+                    <div class="payment-icon">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Cartes bancaires</span>
+                    </div>
+                    <div class="payment-icon">
+                        <i class="fas fa-university"></i>
+                        <span>Virements</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-pay" id="submit-btn">
+                    <i class="fas fa-lock"></i>
+                    <span class="btn-text">Payer {{ transaction.amount }} €</span>
+                    <span class="btn-loading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Traitement en cours...
+                    </span>
+                </button>
+                <a href="{% url 'transaction_detail' transaction.id %}" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Annuler
+                </a>
+            </div>
+        </form>
+        
+        <!-- Messages d'erreur -->
+        <div id="error-message" class="error-message" style="display: none;"></div>
+    </div>
+</div>
+
+<style>
+    .main-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .payment-form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .payment-header {
+        text-align: center;
+    }
+    
+    .payment-title {
+        color: var(--primary-color);
+        font-family: 'RussoOne', sans-serif;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 0 0 15px var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .transaction-summary {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--primary-color);
+    }
+    
+    .transaction-summary h3 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+    
+    .label {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: bold;
+    }
+    
+    .value {
+        color: white;
+    }
+    
+    .value.price {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .payment-form {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 2rem;
+        border: 1px solid var(--primary-color);
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        color: var(--primary-color);
+        font-size: 1.3rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid var(--primary-color);
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: bold;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 10px rgba(108, 92, 231, 0.3);
+    }
+    
+    .form-group input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .payment-methods {
+        margin-bottom: 2rem;
+    }
+    
+    .payment-icons {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .payment-icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+    
+    .payment-icon i {
+        font-size: 2rem;
+        color: var(--primary-color);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn-pay, .btn-cancel {
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-pay {
+        background: var(--primary-color);
+        color: white;
+        flex: 2;
+        justify-content: center;
+    }
+    
+    .btn-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .btn-pay:hover {
+        background: white;
+        color: var(--primary-color);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+    }
+    
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+    }
+    
+    .btn-pay:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .error-message {
+        background: rgba(255, 0, 0, 0.1);
+        border: 1px solid #ff4444;
+        color: #ff4444;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        text-align: center;
+    }
+    
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .payment-icons {
+            gap: 1rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('cinetpay-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoading = submitBtn.querySelector('.btn-loading');
+    const errorMessage = document.getElementById('error-message');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Afficher l'état de chargement
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnLoading.style.display = 'inline-flex';
+        errorMessage.style.display = 'none';
+        
+        // Récupérer les données du formulaire
+        const formData = new FormData(form);
+        
+        // Envoyer la requête AJAX
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Redirection vers:', data.redirect_url);
+                // Rediriger vers CinetPay
+                window.location.href = data.redirect_url;
+            } else {
+                // Afficher l'erreur
+                errorMessage.textContent = data.error || 'Une erreur est survenue';
+                errorMessage.style.display = 'block';
+                
+                // Réactiver le bouton
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            errorMessage.textContent = 'Erreur de connexion. Veuillez réessayer.';
+            errorMessage.style.display = 'block';
+            
+            // Réactiver le bouton
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline';
+            btnLoading.style.display = 'none';
+        });
+    });
+});
+</script>
+{% endblock %} 

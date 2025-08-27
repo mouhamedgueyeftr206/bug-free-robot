@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="loading-container">
+    <div class="loading-content">
+        <div class="loading-logo">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo-image">
+            <h1 class="logo-text">🎮 Boutique Comptes Gaming 🛒</h1>
+        </div>
+        
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        
+        <div class="loading-text">
+            <p class="loading-message">{{ loading_message|default:"Chargement en cours..." }}</p>
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="loading-progress">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <span class="progress-text">0%</span>
+        </div>
+    </div>
+</div>
+
+<style>
+.loading-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+
+.loading-content {
+    text-align: center;
+    max-width: 400px;
+    padding: 2rem;
+}
+
+.loading-logo {
+    margin-bottom: 3rem;
+}
+
+.logo-image {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1rem;
+    animation: logoPulse 2s ease-in-out infinite;
+}
+
+.logo-text {
+    font-family: 'RussoOne', sans-serif;
+    font-size: 2rem;
+    color: var(--primary-color);
+    text-shadow: 0 0 15px var(--primary-color);
+    margin: 0;
+    animation: textGlow 2s ease-in-out infinite;
+}
+
+.loading-spinner {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+}
+
+.spinner-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1.5s linear infinite;
+}
+
+.spinner-ring:nth-child(2) {
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    border-top-color: rgba(108, 92, 231, 0.7);
+    animation-delay: -0.5s;
+}
+
+.spinner-ring:nth-child(3) {
+    width: 60%;
+    height: 60%;
+    top: 20%;
+    left: 20%;
+    border-top-color: rgba(108, 92, 231, 0.4);
+    animation-delay: -1s;
+}
+
+.loading-text {
+    margin-bottom: 2rem;
+}
+
+.loading-message {
+    color: white;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.loading-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    animation: dots 1.5s ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.loading-progress {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), #8c7ae6);
+    border-radius: 3px;
+    animation: progress 3s ease-in-out infinite;
+}
+
+.progress-text {
+    color: #ccc;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes logoPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes textGlow {
+    0%, 100% { text-shadow: 0 0 15px var(--primary-color); }
+    50% { text-shadow: 0 0 25px var(--primary-color), 0 0 35px var(--primary-color); }
+}
+
+@keyframes dots {
+    0%, 80%, 100% { 
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes progress {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+/* Animation d'entrée */
+.loading-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .loading-content {
+        padding: 1rem;
+    }
+    
+    .logo-text {
+        font-size: 1.5rem;
+    }
+    
+    .loading-spinner {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .progress-bar {
+        width: 150px;
+    }
+}
+</style>
+
+<script>
+// Simulation de progression
+let progress = 0;
+const progressFill = document.querySelector('.progress-fill');
+const progressText = document.querySelector('.progress-text');
+
+function updateProgress() {
+    progress += Math.random() * 15;
+    if (progress > 100) progress = 100;
+    
+    progressFill.style.width = progress + '%';
+    progressText.textContent = Math.round(progress) + '%';
+    
+    if (progress < 100) {
+        setTimeout(updateProgress, 200 + Math.random() * 300);
+    }
+}
+
+// Démarrer la progression après un court délai
+setTimeout(updateProgress, 500);
+
+// Redirection automatique après 3-5 secondes (optionnel)
+// setTimeout(() => {
+//     window.location.href = '{{ redirect_url|default:"/" }}';
+// }, 3000 + Math.random() * 2000);
+</script>
+
+{% endblock %} 

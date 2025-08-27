@@ -1,0 +1,410 @@
+# 🎮 DOCUMENTATION COMPLÈTE DU PROJET BLIZZ
+
+## 🎯 **VUE D'ENSEMBLE DU PROJET**
+
+**BLIZZ** est une plateforme de marketplace innovante spécialisée dans la vente et l'achat de données gaming (comptes de jeux, skins, items, etc.). Le projet combine une architecture Django robuste pour le backend avec une interface React moderne pour les fonctionnalités de paiement, créant ainsi une expérience utilisateur complète et sécurisée.
+
+---
+
+
+---
+
+## 👥 **FONCTIONNALITÉS UTILISATEUR**
+
+### **🔐 Système d'Authentification Avancé**
+
+#### **Inscription (CustomUserCreationForm)**
+- **Validation robuste des mots de passe** :
+  - Minimum 8 caractères
+  - Au moins une majuscule et une minuscule
+  - Au moins un chiffre
+  - Exclusion des mots de passe communs
+- **Validation du nom d'utilisateur** :
+  - Caractères autorisés uniquement (lettres, chiffres, tirets, underscores)
+  - Longueur minimale de 3 caractères
+  - Vérification d'unicité
+- **Validation email** : Vérification d'unicité
+- **Acceptation des conditions d'utilisation** obligatoire
+- **Création automatique du profil** lors de l'inscription
+
+#### **Connexion (CustomAuthenticationForm)**
+- **Connexion flexible** : Nom d'utilisateur OU email
+- **Conversion automatique** en minuscules
+- **Option "Se souvenir de moi"**
+- **Messages d'erreur personnalisés**
+
+#### **Récupération de mot de passe**
+- **Demande de réinitialisation** par email
+- **Validation de l'existence** du compte
+- **Formulaire de réinitialisation** avec validation identique à l'inscription
+
+### **👤 Gestion du Profil Utilisateur**
+
+#### **Modification de la photo de profil**
+- **Upload d'images** avec validation
+- **Suppression automatique** des anciennes images
+- **Images par défaut** pour les nouveaux utilisateurs
+- **Stockage organisé** dans `profile_images/`
+
+#### **Personnalisation de la bannière**
+- **Upload de bannières** personnalisées
+- **Gestion automatique** des anciennes bannières
+- **Bannière par défaut** pour les nouveaux comptes
+- **Stockage dans** `banner_images/`
+
+#### **Informations du profil**
+- **Bio personnalisée** (texte libre)
+- **Localisation** (utile pour les paiements régionaux)
+- **ID utilisateur** unique
+- **Interface de modification** intuitive
+
+### **📝 Système de Publication d'Articles**
+
+#### **Création d'articles (Post)**
+- **Titre personnalisable** avec limite de 200 caractères
+- **Description détaillée** (caption) jusqu'à 200 caractères
+- **Prix fixé** par l'utilisateur (validation : max 999,999.99)
+- **Images multiples** (jusqu'à 10 images par article)
+- **Vidéos** supportées pour les démonstrations
+- **Bannière d'article** séparée de la bannière de profil
+- **Données de compte gaming** (email, mot de passe du jeu)
+- **Statut de vente** (disponible/vendu)
+- **Système de vérification** des comptes
+
+#### **Gestion des médias**
+- **Images multiples** avec ordre personnalisable
+- **Vidéos** pour les démonstrations
+- **Upload sécurisé** avec validation des types
+- **Stockage organisé** par type de média
+
+### **💰 Système de Transaction Avancé**
+
+#### **Initiation de transaction**
+- **Création automatique** de transaction lors de l'achat
+- **Statuts multiples** : En attente, En cours, Terminée, Annulée, Litigieuse, Remboursée
+- **Période de sécurité** de 24h pour la protection
+- **Vérification avant/après** du compte gaming
+
+#### **Système de chat intégré**
+- **Chat privé** entre acheteur et vendeur
+- **Messages en temps réel** avec statut de lecture
+- **Historique complet** des conversations
+- **Interface intuitive** pour les échanges
+
+#### **Gestion des litiges**
+- **Système de signalement** de problèmes
+- **Interface de modération** pour les administrateurs
+- **Résolution équitable** des conflits
+- **Protection des deux parties**
+
+### **🔔 Système de Notifications**
+
+#### **Types de notifications**
+- **Intention d'achat** : Notifications aux vendeurs
+- **Nouveaux messages** : Alertes de chat
+- **Mises à jour de transaction** : Statuts, confirmations
+- **Notifications système** : Informations générales
+
+#### **Fonctionnalités**
+- **Statut de lecture** (lu/non lu)
+- **Tri chronologique** (plus récent en premier)
+- **Interface dédiée** pour la gestion
+- **Compteur de notifications** non lues
+
+---
+
+## 💳 **SYSTÈME DE PAIEMENT CINETPAY**
+
+### **🏦 Architecture de Paiement CinetPay**
+
+#### **Encaissement (Pay-in) via CinetPay**
+- **Support multi-moyens** : Mobile Money (Orange Money, MTN, Moov), Cartes bancaires, Virements bancaires
+- **Pays supportés** : Burkina Faso, Bénin, Côte d'Ivoire, Mali, Niger, Sénégal, Togo, Guinée, Cameroun, RD Congo
+- **API robuste** pour les paiements internationaux
+- **Centralisation** vers le compte de la plateforme BLIZZ
+
+#### **Redistribution (Pay-out) via CinetPay**
+- **Paiement des vendeurs** par Mobile Money ou compte bancaire local
+- **Automatisation** des virements après validation
+- **Support multi-opérateurs** : Orange Money, MTN, Moov, etc.
+- **API sécurisée** pour les transferts automatiques
+
+### **🔒 Système d'Escrow Simulé avec CinetPay**
+
+#### **Flux de transaction sécurisé**
+1. **Paiement acheteur** via CinetPay (Mobile Money, cartes, virements)
+2. **Placement en séquestre simulé** (statut "En attente de confirmation")
+3. **Début du chat** entre acheteur et vendeur pour l'échange des données
+4. **Vérification par l'acheteur** des données reçues
+5. **Libération automatique** : 90% au vendeur via CinetPay, 10% commission plateforme
+
+#### **Gestion des litiges**
+- **Signalement de problème** par l'acheteur
+- **Examen par modérateurs** (chat, compte, identité)
+- **Décision équitable** : Remboursement via CinetPay ou transfert au vendeur
+- **Protection des fonds** pendant la période de litige
+
+### **📊 Modèles de Données CinetPay**
+
+#### **CinetPayTransaction**
+- **ID unique** avec UUID
+- **Données client** : nom, email, téléphone
+- **Données vendeur** : téléphone, pays, opérateur Mobile Money
+- **Montants** : total, commission plateforme (10%), montant vendeur (90%)
+- **Statuts détaillés** : 8 états différents (pending_payment, payment_received, in_escrow, etc.)
+- **Timestamps** : création, paiement, confirmation
+- **Données CinetPay** : transaction_id, payment_url, payment_token
+
+#### **EscrowTransaction**
+- **Simulation du séquestre** en base de données
+- **Statuts** : En séquestre, Libéré, Remboursé
+- **Gestion des montants** et devises (XOF, XAF, GNF, USD)
+- **Timestamps** de libération
+
+#### **PayoutRequest**
+- **Demandes de paiement** aux vendeurs via CinetPay
+- **Transferts automatiques** vers Mobile Money ou comptes bancaires
+- **Suivi des transferts** avec IDs uniques CinetPay
+- **Statuts de traitement** détaillés
+
+### **🔄 Flux de Transaction avec Séquestre CinetPay**
+
+#### **Étape 1 : L'acheteur passe sa commande**
+- Il choisit une donnée gaming à acheter
+- Il paie via un moyen local (Mobile Money, carte, virement) — collecté via CinetPay
+
+#### **Étape 2 : L'argent est placé en séquestre simulé**
+- Le montant est conservé virtuellement dans la base de données (statut "En attente de confirmation")
+- La commande n'est pas encore validée
+- CinetPay confirme le paiement reçu
+
+#### **Étape 3 : Début du chat**
+- L'acheteur entre en contact avec le vendeur pour recevoir les données gaming
+- Interface de chat intégrée pour l'échange sécurisé
+
+#### **Étape 4 : Vérification par l'acheteur**
+- Si les données sont valides, il clique sur "Confirmer la commande"
+- Le système passe au statut "Terminé"
+
+#### **Étape 5 : Libération des fonds (payout)**
+- 90% du montant est envoyé automatiquement via l'API CinetPay au vendeur
+- 10% reste temporairement dans le solde de la plateforme en tant que commission
+
+#### **Étape 6 (alternative) : Gestion des litiges**
+- En cas de problème signalé, la transaction passe au statut "litige"
+- Les modérateurs examinent le dossier (chat, compte fourni, identité)
+- Après décision, les fonds sont soit remboursés à l'acheteur via CinetPay, soit transférés au vendeur
+
+### **📋 Règles et Fonctionnalités CinetPay**
+
+#### **Règles supplémentaires**
+- Les vendeurs doivent avoir un compte Mobile Money ou bancaire valide
+- L'acheteur peut annuler la commande si le vendeur ne répond pas dans un délai fixé
+- Les paiements sont déclenchés par action utilisateur ("Confirmer") ou décision modération
+- Une interface de reporting permet aux administrateurs de suivre l'état des paiements CinetPay
+
+#### **Structure des Données**
+- **User** : gestion des utilisateurs
+- **Profile** : données de localisation (utile pour routage du payout CinetPay)
+- **PaymentTransaction** : transactions, statuts, escrow
+- **GameAccount** : données gaming
+- **Dispute** : suivi des litiges
+- **PayoutRequest** : paiements sortants via CinetPay
+
+---
+
+## 🚀 **FONCTIONNALITÉS REACT AVANCÉES**
+
+### **Interface de Paiement CinetPay**
+- **Formulaire de paiement** complet avec validation
+- **Support multi-devises** : XOF, XAF, GNF, USD
+- **Redirection sécurisée** vers CinetPay
+- **Suivi en temps réel** des transactions
+
+### **Dashboard de Transactions**
+- **Liste interactive** des transactions
+- **Filtres et recherche** avancés
+- **Statuts visuels** avec indicateurs
+- **Détails complets** de chaque transaction
+
+### **Interface d'Administration**
+- **Dashboard complet** pour les administrateurs
+- **Gestion des litiges** avec interface dédiée
+- **Statistiques** et métriques en temps réel
+- **Actions de modération** rapides
+
+---
+
+## 🔧 **FONCTIONNALITÉS ADMINISTRATEUR**
+
+### **Dashboard de Modération**
+- **Suivi des transactions** en temps réel
+- **Gestion des litiges** avec interface dédiée
+- **Reporting** par pays, passerelle, utilisateur
+- **Statistiques** de la plateforme
+
+### **Gestion des Paiements CinetPay**
+- **Interface CinetPay** intégrée
+- **Suivi des escrows** simulés
+- **Validation manuelle** des transactions
+- **Gestion des remboursements**
+
+### **Outils d'Administration**
+- **Interface Django Admin** personnalisée
+- **Gestion des utilisateurs** et profils
+- **Modération des articles** et transactions
+- **Configuration** de CinetPay
+
+---
+
+## 🔒 **SÉCURITÉ ET CONFORMITÉ**
+
+### **Sécurité des Données**
+- **Validation robuste** des formulaires
+- **Protection CSRF** sur toutes les actions
+- **Authentification obligatoire** pour les actions sensibles
+- **Validation des fichiers** uploadés
+
+### **Conformité Paiements CinetPay**
+- **Séquestre simulé** pour la protection des fonds
+- **Gestion des litiges** équitable
+- **Traçabilité complète** des transactions
+- **Conformité réglementaire** africaine
+
+### **Protection des Utilisateurs**
+- **Validation des comptes** gaming
+- **Période de sécurité** de 24h
+- **Système de signalement** des abus
+- **Modération active** des contenus
+
+---
+
+## 📱 **FONCTIONNALITÉS MOBILES**
+
+### **Responsive Design**
+- **Adaptation automatique** à tous les écrans
+- **Interface tactile** optimisée
+- **Navigation simplifiée** sur mobile
+- **Upload d'images** depuis l'appareil
+
+### **Performance**
+- **Chargement optimisé** des images
+- **Lazy loading** pour les médias
+- **Cache intelligent** des données
+- **Compression** des assets
+
+---
+
+## 🎯 **OBJECTIFS ET VISION**
+
+### **Mission**
+BLIZZ vise à créer la plateforme de référence pour l'échange sécurisé de données gaming en Afrique, en combinant :
+- **Sécurité maximale** des transactions via CinetPay
+- **Expérience utilisateur** exceptionnelle
+- **Support multi-régional** des paiements africains
+- **Innovation continue** dans le domaine gaming
+
+### **Vision**
+- **Expansion géographique** vers de nouveaux marchés 
+- **Intégration de nouvelles** fonctionnalités CinetPay
+- **Fonctionnalités avancées** de social gaming
+- **Écosystème complet** pour la communauté gaming 
+
+---
+
+## 🔮 **ROADMAP FUTURE**
+
+### **Court terme**
+- **Tests unitaires** complets de l'API CinetPay
+- **Optimisation** des flux de paiement
+- **Amélioration** de l'interface utilisateur
+- **Extension** des pays supportés par CinetPay
+
+### **Moyen terme**
+- **Application mobile** native
+- **Système de réputation** utilisateur
+- **Marketplace d'items** gaming
+- **Intégration blockchain** pour la sécurité
+
+### **Long terme**
+- **Plateforme multi-jeux** complète
+- **Système de tournois** intégré
+- **Marketplace NFT** gaming
+- **Expansion panafricaine** majeure
+
+---
+
+## 📋 **FONCTIONNALITÉS À IMPLÉMENTER**
+
+### **1. Paiement CinetPay**
+- Intégration API complète de CinetPay (encaissement)
+- Intégration API de redistribution CinetPay
+- Simulation du séquestre via statuts internes
+- Système de routage payout selon pays vendeur
+
+### **2. Interface Utilisateur**
+- Page de paiement avec suivi en temps réel
+- Interfaces vendeur/acheteur pour confirmer, contester, suivre
+- Espace de gestion pour les litiges
+
+### **3. Administrateur**
+- Dashboard de suivi des paiements CinetPay
+- Outil d'arbitrage des litiges
+- Reporting par pays / opérateur Mobile Money / utilisateur
+
+---
+NB: Je suis enregistré chez CinetPay et j'ai les APIs.
+
+
+### **Themes et styles** : 
+- Polices (comme ceux de fortnite mais pas identiques) :
+	🎮 La police emblématique utilisée dans le logo du jeu *Fortnite* s'appelle **Burbank Big Condensed Black**. Elle a été conçue par **Tal Leming**, un typographe reconnu pour ses créations audacieuses et expressives.
+
+	### ✨ Caractéristiques de la police Burbank :
+	- **Style** : Sans serif, condensée, avec des lettres épaisses et dynamiques
+	- **Variantes** : 20 styles disponibles, dont des versions optimisées pour les petites tailles (Burbank Small)
+	- **Utilisation** : Principalement pour le logo, les titres et les éléments visuels forts du jeu
+
+	### 📱 Autres polices utilisées dans Fortnite :
+	| Usage                         | Police utilisée                     |
+	|------------------------------|-------------------------------------|
+	| Logo principal                | Burbank Big Condensed Black         |
+	| Interface utilisateur (UI)   | Heading Now                         |
+	| Messages en jeu (kill feed)  | Noto Sans                           |
+	| Événements spéciaux          | Agency (ex. "To Be Continued")      |
+
+-Coleurs : Melange bleu claire fluo, meuve fluo, violet fluo, et blanc
+-styles (comme ceux de valorant mais pas identiques) : 
+	🎯 Le style visuel de *Valorant* — que ce soit dans son menu, son site web ou son interface en jeu — reflète une identité graphique **techno-futuriste**, **minimaliste**, et **très marquée par l’univers de l’espionnage et du combat tactique**. Voici une analyse détaillée :
+
+	### 🖥️ Interface du menu du jeu
+	- **Palette de couleurs** : tons sombres (gris, noir, bleu nuit) avec des accents vifs (rouge, cyan, violet) pour les agents et les effets
+	- **Typographie** : police sans serif, angulaire et condensée, souvent en majuscules pour renforcer l’aspect militaire et sérieux
+	- **Formes** : beaucoup de **rectangles nets**, **lignes diagonales**, et **contours géométriques** qui évoquent des écrans tactiques ou des HUDs (interfaces de combat)
+	- **Effets visuels** :
+  	- Transitions fluides avec des fondus et des zooms
+  	- Effets de surbrillance au survol (hover) des éléments
+  	- Icônes stylisées et animées pour les agents, armes et compétences
+	- **Écrans MVP et chargement** : illustrations 2D des agents mises en valeur avec des **contrastes forts**, des **ombres portées**, et des **bannières symétriques**
+
+	---
+
+	### 🌐 Site internet officiel
+	- **Design responsive** : adapté aux mobiles, avec des blocs modulaires et une navigation fluide
+	- **Esthétique** : mélange de **flat design** et de **motion design**, avec des animations légères au scroll
+	- **Hiérarchie visuelle** :
+	- Titres en gras et capitales
+  	- Sections bien délimitées par des lignes ou des ombrages
+  	- Utilisation de **grilles asymétriques** pour dynamiser la lecture
+	- **Illustrations** : artwork des agents en haute résolution, souvent intégrés dans des compositions diagonales ou en perspective
+
+	---
+
+	### 🧠 Philosophie de design
+	- **Cohérence entre gameplay et interface** : chaque élément visuel vise à renforcer l’immersion dans un monde tactique et compétitif
+	- **Lisibilité avant tout** : les menus ont été épurés pour éviter la surcharge visuelle, avec des contrastes poussés et des formes simplifiées
+	- **Identité forte** : chaque agent a une palette de couleurs et une silhouette reconnaissable, intégrée dans l’interface pour créer une signature visuelle unique
+
+	NB: Ajoute ta touche perso au graphismes, j'ai confiance !
+
+Ce projet BLIZZ représente une solution complète et innovante pour le marketplace gaming africain, combinant sécurité via CinetPay, convivialité et support multi-régional pour créer une expérience exceptionnelle pour tous les utilisateurs. 

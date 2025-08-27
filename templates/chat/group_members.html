@@ -1,0 +1,617 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Membres de {{ group.name }} - BLIZZ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .members-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--dark-blue);
+        min-height: 100vh;
+    }
+
+    .members-header {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 0 15px var(--primary-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .members-header h1 {
+        color: var(--text-color);
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-shadow: 0 0 15px var(--primary-color);
+    }
+
+    .group-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .group-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+    }
+
+    .group-avatar.default {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-color);
+        font-weight: bold;
+        font-size: 20px;
+    }
+
+    .group-details h2 {
+        margin: 0;
+        color: var(--text-color);
+        font-size: 20px;
+    }
+
+    .group-stats {
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .btn-back {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: var(--text-color);
+        border: 1px solid var(--primary-color);
+        padding: 10px 20px;
+        border-radius: 10px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-add {
+        background: linear-gradient(45deg, #27ae60, #2ecc71);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-add:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .members-list {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .member-item {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .member-item:hover {
+        background: rgba(102, 126, 234, 0.1);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .member-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-right: 20px;
+        object-fit: cover;
+        border: 3px solid #667eea;
+    }
+
+    .member-avatar.default {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 24px;
+    }
+
+    .member-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .member-name {
+        font-weight: 700;
+        color: #333;
+        margin: 0 0 5px 0;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .role-badge {
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .badge-admin {
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+    }
+
+    .badge-creator {
+        background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        color: white;
+    }
+
+    .badge-member {
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+    }
+
+    .member-meta {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .member-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-promote {
+        background: rgba(241, 196, 15, 0.2);
+        color: #f1c40f;
+        border: 1px solid rgba(241, 196, 15, 0.3);
+    }
+
+    .btn-promote:hover {
+        background: #f1c40f;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-remove {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-remove:hover {
+        background: #e74c3c;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-chat {
+        background: rgba(102, 126, 234, 0.2);
+        color: #667eea;
+        border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-chat:hover {
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+    }
+
+    .add-member-form {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: none;
+    }
+
+    .add-member-form.active {
+        display: block;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-submit {
+        background: linear-gradient(45deg, #27ae60, #2ecc71);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .btn-cancel {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+        border: 2px solid #6c757d;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-left: 10px;
+    }
+
+    .btn-cancel:hover {
+        background: #6c757d;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .members-container {
+            padding: 10px;
+        }
+        
+        .header-actions {
+            flex-direction: column;
+        }
+        
+        .member-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 15px;
+        }
+        
+        .member-info {
+            order: 2;
+        }
+        
+        .member-actions {
+            order: 3;
+            flex-direction: row;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="members-container">
+    <div class="members-header">
+        <h1>
+            <i class="fas fa-users"></i>
+            Membres du groupe
+        </h1>
+        
+        <div class="group-info">
+            {% if group.avatar %}
+                <img src="{{ group.avatar.url }}" alt="{{ group.name }}" class="group-avatar">
+            {% else %}
+                <div class="group-avatar default">
+                    <i class="fas fa-users"></i>
+                </div>
+            {% endif %}
+            
+            <div class="group-details">
+                <h2>{{ group.name }}</h2>
+                <p class="group-stats">{{ members_data|length }} membre{{ members_data|length|pluralize }} • Créé le {{ group.created_at|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+        
+        <div class="header-actions">
+            <a href="{% url 'group_chat' group.id %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Retour au chat
+            </a>
+            
+            {% if user_membership.is_admin %}
+                <button onclick="toggleAddMemberForm()" class="btn-add" id="addMemberBtn">
+                    <i class="fas fa-user-plus"></i>
+                    Ajouter un membre
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if user_membership.is_admin %}
+        <div class="add-member-form" id="addMemberForm">
+            <h3>Ajouter un nouveau membre</h3>
+            <form method="POST" action="{% url 'add_group_member' group.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="user_id">Sélectionner un utilisateur</label>
+                    <input type="text" 
+                           id="userSearch" 
+                           class="form-control" 
+                           placeholder="Rechercher un utilisateur par nom..."
+                           autocomplete="off">
+                    <input type="hidden" id="user_id" name="user_id" required>
+                    <div id="searchResults" style="margin-top: 10px;"></div>
+                </div>
+                
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-plus"></i>
+                    Ajouter
+                </button>
+                <button type="button" onclick="toggleAddMemberForm()" class="btn-cancel">
+                    Annuler
+                </button>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="members-list">
+        {% for member_data in members_data %}
+            <div class="member-item">
+                {% if member_data.profile and member_data.profile.profileimg %}
+                    <img src="{{ member_data.profile.profileimg.url }}" alt="{{ member_data.user.username }}" class="member-avatar">
+                {% else %}
+                    <div class="member-avatar default">
+                        {{ member_data.user.username|first|upper }}
+                    </div>
+                {% endif %}
+                
+                <div class="member-info">
+                    <div class="member-name">
+                        {{ member_data.user.username }}
+                        
+                        {% if group.created_by == member_data.user %}
+                            <span class="role-badge badge-creator">
+                                <i class="fas fa-star"></i>
+                                Créateur
+                            </span>
+                        {% elif member_data.membership.is_admin %}
+                            <span class="role-badge badge-admin">
+                                <i class="fas fa-crown"></i>
+                                Admin
+                            </span>
+                        {% else %}
+                            <span class="role-badge badge-member">
+                                <i class="fas fa-user"></i>
+                                Membre
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="member-meta">
+                        <span>
+                            <i class="fas fa-calendar"></i>
+                            Rejoint le {{ member_data.membership.joined_at|date:"d/m/Y" }}
+                        </span>
+                        
+                        {% if member_data.profile and member_data.profile.location %}
+                            <span>
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ member_data.profile.location }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="member-actions">
+                    {% if member_data.user != request.user %}
+                        <a href="{% url 'private_chat' member_data.user.id %}" class="btn-action btn-chat">
+                            <i class="fas fa-comment"></i>
+                            Chat privé
+                        </a>
+                    {% endif %}
+                    
+                    {% if member_data.can_manage %}
+                        {% if not member_data.membership.is_admin %}
+                            <form method="POST" action="{% url 'promote_member' group.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ member_data.user.id }}">
+                                <button type="submit" class="btn-action btn-promote">
+                                    <i class="fas fa-arrow-up"></i>
+                                    Promouvoir
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        <form method="POST" action="{% url 'remove_group_member' group.id %}" style="display: inline;" 
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir retirer {{ member_data.user.username }} du groupe ?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ member_data.user.id }}">
+                            <button type="submit" class="btn-action btn-remove">
+                                <i class="fas fa-user-times"></i>
+                                Retirer
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleAddMemberForm() {
+        const form = document.getElementById('addMemberForm');
+        const btn = document.getElementById('addMemberBtn');
+        
+        if (form.classList.contains('active')) {
+            form.classList.remove('active');
+            btn.innerHTML = '<i class="fas fa-user-plus"></i> Ajouter un membre';
+        } else {
+            form.classList.add('active');
+            btn.innerHTML = '<i class="fas fa-times"></i> Annuler';
+            document.getElementById('userSearch').focus();
+        }
+    }
+    
+    // Recherche d'utilisateurs en temps réel
+    let searchTimeout;
+    const userSearch = document.getElementById('userSearch');
+    const userIdInput = document.getElementById('user_id');
+    const searchResults = document.getElementById('searchResults');
+    
+    if (userSearch) {
+        userSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                searchResults.innerHTML = '';
+                userIdInput.value = '';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                searchUsers(query);
+            }, 300);
+        });
+    }
+    
+    function searchUsers(query) {
+        fetch(`/chat/search/?q=${encodeURIComponent(query)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            displaySearchResults(data.users);
+        })
+        .catch(error => {
+            console.error('Erreur lors de la recherche:', error);
+        });
+    }
+    
+    function displaySearchResults(users) {
+        if (users.length === 0) {
+            searchResults.innerHTML = '<p style="color: #666; font-size: 14px; margin: 10px 0;">Aucun utilisateur trouvé</p>';
+            return;
+        }
+        
+        let html = '<div style="border: 1px solid #e0e0e0; border-radius: 8px; max-height: 200px; overflow-y: auto;">';
+        
+        users.forEach(user => {
+            html += `
+                <div onclick="selectUser(${user.id}, '${user.username}')" 
+                     style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; transition: background 0.3s ease;"
+                     onmouseover="this.style.background='rgba(102, 126, 234, 0.1)'"
+                     onmouseout="this.style.background='white'">
+                    ${user.avatar ? 
+                        `<img src="${user.avatar}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">` :
+                        `<div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(45deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${user.username.charAt(0).toUpperCase()}</div>`
+                    }
+                    <span style="font-weight: 600;">${user.username}</span>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        searchResults.innerHTML = html;
+    }
+    
+    function selectUser(userId, username) {
+        userIdInput.value = userId;
+        userSearch.value = username;
+        searchResults.innerHTML = '';
+    }
+</script>
+{% endblock %}

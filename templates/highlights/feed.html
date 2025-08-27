@@ -1,0 +1,1899 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highlights - BLIZZ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/highlights.css' %}">
+    <link rel="stylesheet" href="{% static 'css/appreciation.css' %}">
+    <!-- CSRF Token for AJAX -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        /* Variables CSS globales */
+        :root {
+            --primary-color: #6c5ce7;
+            --accent-color: #a29bfe;
+            --text-color: #ffffff;
+            --bg-color: #0f1729;
+            --secondary-bg: #1a2332;
+            --border-color: rgba(108, 92, 231, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hidden CSRF Token for JavaScript -->
+    {% csrf_token %}
+    
+    <!-- Custom Alert Overlay -->
+    <div id="customAlert" class="custom-alert-overlay" style="display: none;">
+        <div class="custom-alert-box">
+            <div class="alert-icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div class="alert-content">
+                <h3 id="alertTitle">Information</h3>
+                <p id="alertMessage">Message</p>
+            </div>
+            <button class="alert-close-btn" onclick="closeCustomAlert()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="highlights-container">
+    <!-- Header TikTok-like avec bouton retour - ÉPAISSEUR RÉDUITE -->
+    <div class="highlights-header">
+        <div class="header-left">
+            <a href="{% url 'index' %}" class="exit-btn">
+                <i class="fas fa-door-open"></i>
+            </a>
+        </div>
+        <div class="header-tabs">
+            <a href="{% url 'highlights_for_you' %}" class="header-tab {% if request.resolver_match.url_name == 'highlights_for_you' %}active{% endif %}">
+                <span>Pour toi</span>
+            </a>
+            <a href="{% url 'highlights_friends' %}" class="header-tab {% if request.resolver_match.url_name == 'highlights_friends' %}active{% endif %}">
+                <span>Amis</span>
+        </a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'create_highlight' %}" class="header-tab create-tab">
+                <span>Créer</span>
+        </a>
+        {% endif %}
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'highlights_search' %}" class="search-btn">
+                <i class="fas fa-search"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Container principal des highlights -->
+    <div class="highlights-viewer" id="highlightsViewer">
+    {% if highlights %}
+                {% for highlight in highlights %}
+            <div class="highlight-card" data-highlight-id="{{ highlight.id }}" data-index="{{ forloop.counter0 }}">
+                <!-- Vidéo principale en format vertical - DIMENSIONS RÉDUITES -->
+                <div class="video-container">
+                    <video 
+                        class="highlight-video" 
+                        preload="none" 
+                        loop 
+                        playsinline
+                        muted
+                        data-highlight-id="{{ highlight.id }}"
+                        data-original-src="{{ highlight.video.url }}"
+                        poster="{{ highlight.thumbnail.url|default:'' }}"
+                        loading="lazy"
+                    >
+                        <source src="{{ highlight.video.url }}" type="video/mp4">
+                    </video>
+                    
+                    <!-- Boutons d'action SUR la vidéo à droite - COMME TIKTOK - TAILLE RÉDUITE - REPOSITIONNÉS -->
+                    <div class="actions-overlay">
+                        <!-- Actions compactes -->
+                        <div class="compact-actions">
+                            <!-- Profil utilisateur avec bouton follow -->
+                            <div class="user-profile">
+                                <div class="profile-pic" onclick="viewProfile('{{ highlight.author.username }}')">
+                                    {% if highlight.author.profile.profileimg %}
+                                        <img src="{{ highlight.author.profile.profileimg.url }}" alt="Profile">
+                                    {% else %}
+                                        <img src="{% static 'images/default_profile.png' %}" alt="Profile">
+                                    {% endif %}
+                                </div>
+                                <button class="follow-btn" onclick="toggleFollow({{ highlight.author.id }})">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+
+                            <!-- Système d'appréciation -->
+                            {% if user.is_authenticated %}
+                            <div class="appreciation-container" data-highlight-id="{{ highlight.id }}">
+                                <div class="appreciation-buttons">
+                                    <button class="appreciation-button {% if highlight.user_appreciation.appreciation_level == 6 %}selected{% endif %}" data-level="6" data-highlight-id="{{ highlight.id }}">
+                                        <span class="appreciation-emoji">🤩</span>
+                                        <div class="appreciation-count">{{ highlight.appreciation_counts.6|default:0 }}</div>
+                                        <div class="appreciation-tooltip">Extraordinaire</div>
+                                    </button>
+                                    <button class="appreciation-button {% if highlight.user_appreciation.appreciation_level == 5 %}selected{% endif %}" data-level="5" data-highlight-id="{{ highlight.id }}">
+                                        <span class="appreciation-emoji">😲</span>
+                                        <div class="appreciation-count">{{ highlight.appreciation_counts.5|default:0 }}</div>
+                                        <div class="appreciation-tooltip">Très bien</div>
+                                    </button>
+                                    <button class="appreciation-button {% if highlight.user_appreciation.appreciation_level == 4 %}selected{% endif %}" data-level="4" data-highlight-id="{{ highlight.id }}">
+                                        <span class="appreciation-emoji">😮</span>
+                                        <div class="appreciation-count">{{ highlight.appreciation_counts.4|default:0 }}</div>
+                                        <div class="appreciation-tooltip">Bien</div>
+                                    </button>
+                                    <button class="appreciation-button {% if highlight.user_appreciation.appreciation_level == 3 %}selected{% endif %}" data-level="3" data-highlight-id="{{ highlight.id }}">
+                                        <span class="appreciation-emoji">🙂</span>
+                                        <div class="appreciation-count">{{ highlight.appreciation_counts.3|default:0 }}</div>
+                                        <div class="appreciation-tooltip">Moyen</div>
+                                    </button>
+                                    <button class="appreciation-button {% if highlight.user_appreciation.appreciation_level == 2 %}selected{% endif %}" data-level="2" data-highlight-id="{{ highlight.id }}">
+                                        <span class="appreciation-emoji">🤢</span>
+                                        <div class="appreciation-count">{{ highlight.appreciation_counts.2|default:0 }}</div>
+                                        <div class="appreciation-tooltip">Pas terrible</div>
+                                    </button>
+                                    <button class="appreciation-button {% if highlight.user_appreciation.appreciation_level == 1 %}selected{% endif %}" data-level="1" data-highlight-id="{{ highlight.id }}">
+                                        <span class="appreciation-emoji">🤮</span>
+                                        <div class="appreciation-count">{{ highlight.appreciation_counts.1|default:0 }}</div>
+                                        <div class="appreciation-tooltip">Extrêmement nul</div>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Actions secondaires -->
+                            <div class="action-buttons">
+                                <button class="action-btn share-btn" onclick="shareHighlight('{{ highlight.id }}')">
+                                    <i class="fas fa-share"></i>
+                                    <span class="action-count">{{ highlight.shares_count }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations utilisateur et titre SUR la vidéo en bas à gauche -->
+                    <div class="video-info-overlay">
+                        <div class="user-info">
+                            <span class="username">@{{ highlight.author.username }}</span>
+                            <p class="caption">{{ highlight.caption|default:"Aucun titre" }}</p>
+                </div>
+            </div>
+
+                    <!-- Barre de progression en bas -->
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                </div>
+                </div>
+
+            <!-- Menu plus d'options -->
+                <div class="more-options-menu" id="more-options-{{ highlight.id }}" style="display: none;">
+                    <div class="options-list">
+                        <button class="option-item" onclick="reportHighlight('{{ highlight.id }}')">
+                            <i class="fas fa-flag"></i>
+                            Signaler
+                        </button>
+                        <button class="option-item" onclick="shareHighlight('{{ highlight.id }}')">
+                            <i class="fas fa-share"></i>
+                            Partager
+                        </button>
+                    {% if user.is_authenticated and highlight.author == user %}
+                        <button class="option-item delete-btn" onclick="deleteHighlight('{{ highlight.id }}')">
+                        <i class="fas fa-trash"></i>
+                        Supprimer
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+                {% endfor %}
+    {% else %}
+    <!-- État vide -->
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-video"></i>
+        </div>
+        <h3>Aucun Highlight pour le moment</h3>
+        <p>
+            {% if request.resolver_match.url_name == 'highlights_friends' %}
+            Vos amis n'ont pas encore partagé de Highlights.
+            {% else %}
+            Il n'y a pas encore de Highlights disponibles.
+            {% endif %}
+        </p>
+        {% if user.is_authenticated %}
+        <a href="{% url 'create_highlight' %}" class="create-first-btn">
+            <i class="fas fa-plus"></i>
+            Créer le premier Highlight
+        </a>
+        {% else %}
+        <a href="{% url 'signin' %}" class="create-first-btn">
+            <i class="fas fa-sign-in-alt"></i>
+            Se connecter pour créer
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+    </div>
+
+    <!-- Navigation par flèches - GARDÉES LÀ OÙ ELLES SONT -->
+    <div class="navigation-arrows">
+        <button class="nav-arrow prev-arrow" onclick="previousHighlight()">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+        <button class="nav-arrow next-arrow" onclick="nextHighlight()">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+</div>
+
+<style>
+/* Variables CSS - Utilisation du thème principal */
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --accent-color: #ff6b6b;
+    --success-color: #00b894;
+    --warning-color: #fdcb6e;
+    --error-color: #e17055;
+    --text-color: #ffffff;
+    --text-secondary: #b8b8b8;
+    --bg-dark: #0f1729; /* Couleur du thème principal au lieu du noir */
+    --bg-card: #1a2332; /* Version plus claire du thème principal */
+    --border-color: rgba(108, 92, 231, 0.2);
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+* {
+        margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Container principal - format vertical comme TikTok */
+.highlights-container {
+    width: 100%;
+    height: 100vh;
+    background: var(--bg-dark);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Custom Alert Styles */
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 41, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.custom-alert-box {
+    background: linear-gradient(135deg, var(--bg-card), var(--primary-color));
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(108, 92, 231, 0.3);
+    animation: slideInUp 0.3s ease;
+}
+
+.alert-icon {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.alert-icon i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    filter: drop-shadow(0 0 10px var(--primary-color));
+}
+
+.alert-content h3 {
+    color: var(--text-color);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.alert-content p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.alert-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 107, 107, 0.2);
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.alert-close-btn:hover {
+    background: var(--error-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header TikTok-like avec bouton retour - ÉPAISSEUR RÉDUITE */
+.highlights-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(180deg, rgba(15, 23, 41, 0.95) 0%, transparent 100%);
+    padding: 0.5rem 2rem; /* RÉDUIT de 1rem à 0.5rem */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Removed backdrop-filter to prevent interference with video */
+    height: 50px; /* HAUTEUR FIXE RÉDUITE */
+    /* Ensure this header doesn't affect video below */
+    pointer-events: auto;
+}
+
+/* Ensure header elements have proper pointer events */
+.highlights-header * {
+    pointer-events: auto;
+}
+
+.header-left {
+        display: flex;
+    align-items: center;
+    }
+
+.exit-btn {
+    background: rgba(108, 92, 231, 0.2);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    outline: none;
+}
+
+.exit-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+}
+
+.header-tabs {
+        display: flex;
+        gap: 2rem;
+    }
+
+.header-tab {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem; /* RÉDUIT */
+    padding: 0.3rem 0; /* RÉDUIT */
+        position: relative;
+    transition: color 0.3s ease;
+}
+
+.header-tab.active {
+    color: var(--text-color);
+}
+
+.header-tab.active::after {
+    content: '';
+        position: absolute;
+    bottom: 0;
+        left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+    border-radius: 1px;
+}
+
+/* Style spécial pour le bouton Créer */
+.header-tab.create-tab {
+    background: rgba(108, 92, 231, 0.1);
+    border: 1px solid var(--primary-color);
+    border-radius: 15px;
+    padding: 0.3rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.header-tab.create-tab:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(108, 92, 231, 0.3);
+}
+
+.header-actions {
+        display: flex;
+    gap: 1rem;
+}
+
+.search-btn {
+    width: 35px; /* RÉDUIT */
+    height: 35px; /* RÉDUIT */
+        border-radius: 50%;
+    background: rgba(108, 92, 231, 0.2);
+    border: 1px solid var(--primary-color);
+    color: var(--text-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    text-decoration: none; /* Enlever la décoration */
+    }
+    
+.search-btn:hover {
+    background: var(--primary-color);
+        transform: scale(1.1);
+}
+
+/* Viewer principal - format vertical */
+.highlights-viewer {
+    width: 100%;
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+}
+
+/* Carte de highlight - FORMAT VERTICAL 9:16 */
+.highlight-card {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    scroll-snap-align: start;
+    display: flex;
+    background: var(--bg-dark);
+    justify-content: center;
+}
+
+/* Container vidéo - FORMAT VERTICAL CENTRÉ avec DIMENSIONS RÉDUITES et CENTRAGE PARFAIT */
+.video-container {
+    position: relative;
+    width: 100%;
+    max-width: 350px; /* RÉDUIT de 400px à 350px pour voir les contours */
+    height: 85vh; /* RÉDUIT de 90vh à 85vh pour éviter l'espace excessif */
+    background: #000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin: 12vh 0 7vh 0; /* Marge TOP augmentée pour plus d'espace avec le header */
+    border-radius: 15px; /* Coins arrondis pour plus d'élégance */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Ombre pour délimiter */
+}
+
+.highlight-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+    /* Prevent any unwanted effects */
+    transition: none !important;
+    transform: none !important;
+    /* Explicit filter prevention */
+    -webkit-filter: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    /* Ensure clean video display */
+    isolation: isolate;
+}
+
+/* Prevent any hover effects on video container */
+.video-container:hover,
+.highlight-card:hover,
+.highlight-video:hover {
+    /* Explicitly prevent any changes */
+    transform: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+    background: inherit !important;
+    backdrop-filter: none !important;
+}
+
+/* Ensure no blur effects affect the video area */
+.video-container,
+.highlight-video,
+.highlight-card {
+    backdrop-filter: none !important;
+    filter: none !important;
+}
+
+/* Prevent any overlay elements from affecting video display */
+.video-container *:hover {
+    backdrop-filter: none !important;
+    filter: none !important;
+}
+
+/* Global blur prevention for video area */
+.highlight-card:hover .video-container,
+.highlight-card:hover .highlight-video,
+.highlight-card .video-container:hover,
+.highlight-card .highlight-video:hover {
+    backdrop-filter: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+
+/* Ensure no pseudo-elements create blur effects */
+.video-container::before,
+.video-container::after,
+.highlight-video::before,
+.highlight-video::after,
+.highlight-card::before,
+.highlight-card::after {
+    backdrop-filter: none !important;
+    filter: none !important;
+    display: none !important;
+}
+
+/* Force remove any inherited blur effects */
+.video-container,
+.video-container *,
+.highlight-video {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-filter: none !important;
+    filter: none !important;
+}
+
+/* Barre de progression */
+.progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    width: 0%;
+    transition: width 0.1s linear;
+    border-radius: 2px;
+}
+    
+/* Boutons d'action SUR la vidéo à droite - COMME TIKTOK - TAILLE RÉDUITE - REPOSITIONNÉS */
+.actions-overlay {
+        position: absolute;
+    right: 0.4rem;
+    bottom: 1rem; /* Positionné tout en bas */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 100;
+    align-items: center;
+}
+
+/* Informations utilisateur et titre SUR la vidéo en bas à gauche */
+.video-info-overlay {
+    position: absolute;
+    left: 1rem;
+    bottom: 2rem;
+    z-index: 100;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.user-info {
+        display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.user-info .username {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    text-decoration: none;
+}
+
+.user-info .caption {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    max-width: 200px;
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+/* Styles pour les éléments de profil et boutons d'action */
+.user-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem; /* Réduit pour rapprocher les éléments */
+    position: relative;
+}
+    
+.profile-pic {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    }
+
+.profile-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.follow-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    border: none;
+    color: white;
+    font-size: 0.6rem;
+    cursor: pointer;
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Actions compactes - Positionnement vers le bas */
+.compact-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    align-items: center;
+}
+
+/* Boutons d'action avec compteurs - TAILLE RÉDUITE */
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+        display: flex;
+    flex-direction: column;
+        align-items: center;
+    gap: 0.2rem; /* Réduit de 0.3rem à 0.2rem */
+    /* Removed transition to prevent unwanted effects */
+}
+
+.action-btn i {
+    font-size: 1.2rem; /* Réduit de 1.5rem à 1.2rem */
+    width: 40px; /* Réduit de 50px à 40px */
+    height: 40px; /* Réduit de 50px à 40px */
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Removed transition to prevent unwanted effects */
+}
+
+/* Removed hover effect that could interfere with video display */
+
+.action-btn.liked i {
+    color: var(--accent-color);
+    animation: heartBeat 0.3s ease;
+}
+
+@keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.action-count {
+    font-size: 0.7rem; /* Réduit de 0.8rem à 0.7rem */
+    color: var(--text-secondary);
+    font-weight: 600;
+    min-width: 25px; /* Réduit de 30px à 25px */
+    text-align: center;
+}
+
+/* Bouton téléchargement spécial - TAILLE RÉDUITE */
+.download-btn .action-count {
+    font-size: 0.6rem; /* Réduit de 0.7rem à 0.6rem */
+    max-width: 50px; /* Réduit de 60px à 50px */
+    line-height: 1.2;
+}
+
+/* Styles pour les informations utilisateur sur la vidéo */
+.username {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.caption {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+    max-width: 300px;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Menu plus d'options */
+.more-options-menu {
+    position: absolute;
+    top: 50%;
+    right: 8rem;
+    background: rgba(15, 23, 41, 0.95);
+    border-radius: 15px;
+    padding: 1rem;
+    z-index: 300;
+    min-width: 200px;
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+}
+
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.option-item {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 0.8rem 1rem;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.option-item:hover {
+    background: rgba(108, 92, 231, 0.1);
+}
+
+.option-item.delete-btn {
+    color: var(--error-color);
+}
+
+/* Navigation par flèches - GARDÉES LÀ OÙ ELLES SONT */
+.navigation-arrows {
+    position: fixed;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 100;
+}
+
+.nav-arrow {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(108, 92, 231, 0.2);
+    border: 1px solid var(--primary-color);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    /* Removed backdrop-filter to prevent interference */
+}
+
+.nav-arrow:hover {
+    background: var(--primary-color);
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+}
+
+.nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* État vide */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 2rem;
+    opacity: 0.5;
+}
+
+.create-first-btn {
+    background: var(--primary-color);
+    color: white;
+        text-decoration: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    margin-top: 2rem;
+    transition: all 0.3s ease;
+}
+
+.create-first-btn:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+/* Responsive Design - Boutons réduits et repositionnés */
+@media (max-width: 768px) {
+    .highlights-header {
+        padding: 0.4rem 1rem;
+        height: 45px;
+    }
+    
+    .header-tabs {
+        gap: 1rem;
+    }
+    
+    .header-tab {
+        font-size: 0.9rem;
+        padding: 0.2rem 0;
+    }
+    
+    .video-container {
+        max-width: 320px;
+        height: 80vh;
+        margin: 10vh 0 10vh 0;
+    }
+    
+    .actions-overlay {
+        right: 0.3rem; /* Réduit pour mobile */
+        bottom: 1.5rem; /* Ajusté pour mobile */
+        gap: 0.8rem;
+    }
+    
+    .video-info-overlay {
+        left: 0.8rem; /* Réduit pour mobile */
+        bottom: 1.5rem; /* Ajusté pour mobile */
+    }
+    
+    .profile-pic {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .action-btn i {
+        width: 35px;
+        height: 35px;
+        font-size: 1.1rem;
+    }
+    
+    .follow-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 0.5rem;
+    }
+    
+    .user-info .username {
+    font-size: 0.9rem;
+}
+
+    .user-info .caption {
+        font-size: 0.8rem;
+        max-width: 180px;
+    }
+    
+    .bottom-info {
+        left: 0.5rem;
+        right: 6rem;
+        bottom: 1.5rem;
+    }
+    
+    /* Masquer les flèches sur mobile */
+    .navigation-arrows {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .actions-overlay {
+        right: 0.2rem;
+        bottom: 1.2rem; /* Ajusté pour petit mobile */
+        gap: 0.6rem;
+    }
+    
+    .video-info-overlay {
+        left: 0.6rem; /* Réduit pour petit mobile */
+        bottom: 1.2rem; /* Ajusté pour petit mobile */
+    }
+    
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .action-btn i {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+    
+    .follow-btn {
+        width: 18px;
+        height: 18px;
+        font-size: 0.4rem;
+    }
+    
+    .user-info .username {
+        font-size: 0.8rem;
+    }
+    
+    .user-info .caption {
+        font-size: 0.7rem;
+        max-width: 160px;
+    }
+    
+
+    
+    .username {
+        font-size: 0.9rem;
+    }
+    
+    .caption {
+        font-size: 0.8rem;
+    }
+    
+    .back-btn {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.7rem;
+    }
+    
+    .video-container {
+        max-width: 300px;
+        height: 75vh;
+        margin: 12vh 0 13vh 0;
+    }
+}
+
+/* Scrollbar personnalisée */
+.highlights-viewer::-webkit-scrollbar {
+    width: 0;
+}
+
+.highlights-viewer::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.highlights-viewer::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+/* Améliorations visuelles supplémentaires */
+.highlight-card {
+    position: relative;
+}
+
+.highlight-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent, rgba(108, 92, 231, 0.05));
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Animation d'entrée pour les highlights */
+@keyframes slideInFromBottom {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.highlight-card {
+    animation: slideInFromBottom 0.5s ease-out;
+}
+
+/* Effet de focus pour l'accessibilité */
+.action-btn:focus,
+.nav-arrow:focus,
+.comment-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.3);
+}
+
+/* Remove default button outlines and focus states */
+.action-btn,
+.follow-btn,
+.exit-btn,
+.alert-close-btn {
+    outline: none;
+    border: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.action-btn:focus,
+.action-btn:active,
+.follow-btn:focus,
+.follow-btn:active {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Mode sombre amélioré */
+@media (prefers-color-scheme: dark) {
+    .highlight-card {
+        background: var(--bg-dark);
+    }
+    
+    .comments-section {
+        background: rgba(15, 23, 41, 0.98);
+    }
+}
+
+/* Amélioration de l'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+
+<script>
+// Custom Alert Functions
+function showCustomAlert(title, message, type = 'info') {
+    const alertOverlay = document.getElementById('customAlert');
+    const alertTitle = document.getElementById('alertTitle');
+    const alertMessage = document.getElementById('alertMessage');
+    const alertIcon = alertOverlay.querySelector('.alert-icon i');
+    
+    // Set content
+    alertTitle.textContent = title;
+    alertMessage.textContent = message;
+    
+    // Set icon based on type
+    alertIcon.className = '';
+    switch(type) {
+        case 'success':
+            alertIcon.className = 'fas fa-check-circle';
+            alertIcon.style.color = 'var(--success-color)';
+            break;
+        case 'error':
+            alertIcon.className = 'fas fa-exclamation-triangle';
+            alertIcon.style.color = 'var(--error-color)';
+            break;
+        case 'warning':
+            alertIcon.className = 'fas fa-exclamation-circle';
+            alertIcon.style.color = 'var(--warning-color)';
+            break;
+        default:
+            alertIcon.className = 'fas fa-info-circle';
+            alertIcon.style.color = 'var(--primary-color)';
+    }
+    
+    // Show alert
+    alertOverlay.style.display = 'flex';
+    
+    // Auto close after 3 seconds for success messages
+    if (type === 'success') {
+        setTimeout(() => {
+            closeCustomAlert();
+        }, 3000);
+    }
+}
+
+function closeCustomAlert() {
+    const alertOverlay = document.getElementById('customAlert');
+    alertOverlay.style.display = 'none';
+}
+
+// Close alert when clicking outside
+document.addEventListener('click', function(event) {
+    const alertOverlay = document.getElementById('customAlert');
+    const alertBox = alertOverlay.querySelector('.custom-alert-box');
+    
+    if (event.target === alertOverlay && !alertBox.contains(event.target)) {
+        closeCustomAlert();
+    }
+});
+
+// Variables globales
+let currentHighlightIndex = 0;
+let highlights = [];
+let isPlaying = false;
+let isMouseOverVideo = false; // Track mouse hover state
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    highlights = Array.from(document.querySelectorAll('.highlight-card'));
+    
+    // Ensure all videos have proper sources
+    highlights.forEach(highlight => {
+        const video = highlight.querySelector('video');
+        if (video && !video.src && video.getAttribute('data-original-src')) {
+            video.src = video.getAttribute('data-original-src');
+        }
+        
+        // Add mouse event listeners to track hover state
+        highlight.addEventListener('mouseenter', () => {
+            isMouseOverVideo = true;
+        });
+        
+        highlight.addEventListener('mouseleave', () => {
+            isMouseOverVideo = false;
+        });
+    });
+    
+    if (highlights.length > 0) {
+        showHighlight(0);
+        setupVideoProgress();
+        setupSwipeNavigation();
+    }
+    
+    updateNavigationButtons();
+    
+    // Masquer les flèches sur mobile
+    if (window.innerWidth <= 768) {
+        document.querySelector('.navigation-arrows').style.display = 'none';
+    }
+});
+
+// Fonction de retour
+function goBack() {
+    if (history.length > 1) {
+        history.back();
+    } else {
+        window.location.href = '/';
+    }
+}
+
+// Navigation des highlights - AMÉLIORÉE pour une meilleure coordination
+function nextHighlight() {
+    if (currentHighlightIndex < highlights.length - 1) {
+        showHighlight(currentHighlightIndex + 1);
+    }
+}
+
+function previousHighlight() {
+    if (currentHighlightIndex > 0) {
+        showHighlight(currentHighlightIndex - 1);
+    }
+}
+
+function showHighlight(index) {
+    if (index < 0 || index >= highlights.length) return;
+    
+    // Arrêter la vidéo précédente
+    if (currentHighlightIndex !== index) {
+        const previousVideo = highlights[currentHighlightIndex]?.querySelector('video');
+        if (previousVideo) {
+            previousVideo.pause();
+            previousVideo.currentTime = 0;
+        }
+    }
+    
+    // Mettre à jour l'index
+    currentHighlightIndex = index;
+    
+    // Faire défiler vers le highlight avec un scroll plus précis
+    const targetHighlight = highlights[index];
+    const container = document.getElementById('highlightsViewer');
+    
+    // Calculer la position exacte pour un centrage parfait
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = targetHighlight.getBoundingClientRect();
+    const scrollTop = container.scrollTop + targetRect.top - containerRect.top;
+    
+    // Scroll fluide et précis
+    container.scrollTo({
+        top: scrollTop,
+        behavior: 'smooth'
+    });
+    
+    // Démarrer la nouvelle vidéo après le scroll - ONLY for the current video
+    setTimeout(() => {
+        const currentVideo = highlights[index].querySelector('video');
+        if (currentVideo) {
+            // Ensure video source is loaded
+            if (!currentVideo.src && currentVideo.getAttribute('data-original-src')) {
+                currentVideo.src = currentVideo.getAttribute('data-original-src');
+                currentVideo.load();
+            }
+            // Play only if not already playing and ready
+            if (currentVideo.paused && currentVideo.readyState >= 2) {
+                currentVideo.play().catch(e => console.log('Autoplay prevented:', e));
+            }
+        }
+    }, 500); // Délai augmenté pour laisser le scroll se terminer
+    
+    updateNavigationButtons();
+}
+
+// Mise à jour des boutons de navigation
+function updateNavigationButtons() {
+    const prevArrow = document.querySelector('.prev-arrow');
+    const nextArrow = document.querySelector('.next-arrow');
+    
+    if (prevArrow) {
+        prevArrow.disabled = currentHighlightIndex === 0;
+    }
+    
+    if (nextArrow) {
+        nextArrow.disabled = currentHighlightIndex === highlights.length - 1;
+    }
+}
+
+// Configuration de la progression vidéo - AMÉLIORÉE
+function setupVideoProgress() {
+    highlights.forEach((highlight, index) => {
+        const video = highlight.querySelector('video');
+        const progressFill = highlight.querySelector('.progress-fill');
+        
+        if (video && progressFill) {
+            video.addEventListener('timeupdate', () => {
+                if (video.duration) {
+                    const progress = (video.currentTime / video.duration) * 100;
+                    progressFill.style.width = progress + '%';
+                }
+            });
+            
+            video.addEventListener('ended', () => {
+                // Auto-play next video avec délai pour éviter les conflits
+                if (index < highlights.length - 1) {
+                    setTimeout(() => nextHighlight(), 1500); // Délai augmenté
+                }
+            });
+        }
+    });
+}
+
+// Navigation par swipe (mobile) - AMÉLIORÉE
+function setupSwipeNavigation() {
+    let startY = 0;
+    let endY = 0;
+    let isScrolling = false;
+    
+    highlights.forEach(highlight => {
+        highlight.addEventListener('touchstart', (e) => {
+            if (isScrolling) return;
+            startY = e.touches[0].clientY;
+        });
+        
+        highlight.addEventListener('touchend', (e) => {
+            if (isScrolling) return;
+            endY = e.changedTouches[0].clientY;
+            const diffY = startY - endY;
+            
+            if (Math.abs(diffY) > 80) { // Seuil augmenté pour éviter les déclenchements accidentels
+                isScrolling = true;
+                
+                if (diffY > 0 && currentHighlightIndex < highlights.length - 1) {
+                    // Swipe vers le haut
+                    nextHighlight();
+                } else if (diffY < 0 && currentHighlightIndex > 0) {
+                    // Swipe vers le bas
+                    previousHighlight();
+                }
+                
+                // Délai pour éviter les swipes multiples
+                setTimeout(() => {
+                    isScrolling = false;
+                }, 1000);
+            }
+        });
+    });
+}
+
+// Actions sociales
+function toggleLike(highlightId) {
+    console.log('toggleLike called with highlightId:', highlightId);
+    
+    // Vérifier l'authentification
+    if (!getCookie('csrftoken')) {
+        console.log('No CSRF token, redirecting to signin');
+        window.location.href = '/signin/';
+        return;
+    }
+    
+    console.log('CSRF token found:', getCookie('csrftoken'));
+    
+    const highlight = document.querySelector(`[data-highlight-id="${highlightId}"]`);
+    if (!highlight) {
+        console.error('Highlight element not found for ID:', highlightId);
+        return;
+    }
+    
+    const likeBtn = highlight.querySelector('.like-btn');
+    const likeIcon = likeBtn.querySelector('i');
+    const likeCount = likeBtn.querySelector('.action-count');
+    
+    console.log('Making fetch request to:', `/highlights/${highlightId}/like/`);
+    
+    // Envoyer la requête au serveur
+    fetch(`/highlights/${highlightId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            if (data.liked) {
+                likeIcon.classList.add('liked');
+                likeIcon.className = 'fas fa-heart liked';
+            } else {
+                likeIcon.classList.remove('liked');
+                likeIcon.className = 'fas fa-heart';
+            }
+            likeCount.textContent = data.appreciations_count;
+        } else {
+            console.error('Erreur serveur:', data.error);
+            showCustomAlert('Erreur', data.error || 'Erreur inconnue', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur AJAX:', error);
+        showCustomAlert('Erreur de connexion', 'Veuillez réessayer.', 'error');
+    });
+}
+
+function toggleFollow(userId) {
+    // Vérifier l'authentification
+    if (!getCookie('csrftoken')) {
+        window.location.href = '/signin/';
+        return;
+    }
+    
+    const followBtn = event.target;
+    
+    // Envoyer la requête au serveur
+    fetch(`/subscribe/${userId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.subscribed) {
+                followBtn.innerHTML = '<i class="fas fa-check"></i>';
+                followBtn.style.background = '#28a745';
+                followBtn.title = 'Abonné';
+            } else {
+                followBtn.innerHTML = '<i class="fas fa-plus"></i>';
+                followBtn.style.background = 'var(--accent-color)';
+                followBtn.title = 'S\'abonner';
+            }
+        } else {
+            console.error('Erreur serveur:', data.error);
+            showCustomAlert('Erreur', data.error || 'Impossible de s\'abonner', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur AJAX:', error);
+        showCustomAlert('Erreur de connexion', 'Veuillez réessayer.', 'error');
+    });
+}
+
+function shareHighlight(highlightId) {
+    console.log('shareHighlight called with highlightId:', highlightId);
+    
+    const url = `${window.location.origin}/highlights/${highlightId}/`;
+    console.log('Share URL:', url);
+    
+    if (navigator.share) {
+        console.log('Using native share API');
+        navigator.share({
+            title: 'Regardez ce highlight sur BLIZZ!',
+            url: url,
+        });
+    } else {
+        console.log('Using clipboard fallback');
+        // Fallback pour les navigateurs qui ne supportent pas l'API Share
+        navigator.clipboard.writeText(url).then(() => {
+            console.log('URL copied to clipboard');
+            // Visual feedback
+            const shareBtn = document.querySelector(`[data-highlight-id="${highlightId}"] .share-btn`);
+            if (shareBtn) {
+                const originalHTML = shareBtn.innerHTML;
+                shareBtn.innerHTML = '<i class="fas fa-check"></i><span class="action-count">Copié!</span>';
+                
+                setTimeout(() => {
+                    shareBtn.innerHTML = originalHTML;
+                }, 2000);
+            }
+        }).catch((error) => {
+            console.error('Clipboard write failed:', error);
+            showCustomAlert('Partage', 'Lien: ' + url, 'info');
+        });
+    }
+    
+    // Enregistrer le partage côté serveur si utilisateur connecté
+    if (getCookie('csrftoken')) {
+        console.log('Recording share on server');
+        fetch(`/highlights/${highlightId}/share/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            console.log('Share record response:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Share record data:', data);
+        })
+        .catch(error => {
+            console.error('Erreur enregistrement partage:', error);
+        });
+    } else {
+        console.log('No CSRF token, skipping server-side share recording');
+    }
+}
+
+// NOUVELLE FONCTION : Téléchargement de highlight
+function downloadHighlight(highlightId) {
+    console.log('downloadHighlight called with highlightId:', highlightId);
+    
+    const highlight = document.querySelector(`[data-highlight-id="${highlightId}"]`);
+    if (!highlight) {
+        console.error('Highlight element not found for ID:', highlightId);
+        return;
+    }
+    
+    const video = highlight.querySelector('video');
+    if (!video) {
+        console.error('Video element not found in highlight:', highlightId);
+        return;
+    }
+    
+    // Try multiple sources for the video URL
+    let videoUrl = null;
+    
+    // First, try the current src
+    if (video.src && video.src !== window.location.href) {
+        videoUrl = video.src;
+        console.log('Using current video src:', videoUrl);
+    }
+    // Then try the data-original-src attribute
+    else if (video.getAttribute('data-original-src')) {
+        videoUrl = video.getAttribute('data-original-src');
+        console.log('Using data-original-src:', videoUrl);
+    }
+    // Finally, try the source element
+    else {
+        const source = video.querySelector('source');
+        if (source && source.src) {
+            videoUrl = source.src;
+            console.log('Using source element src:', videoUrl);
+        }
+    }
+    
+    console.log('Final video URL:', videoUrl);
+    
+    if (videoUrl && videoUrl !== window.location.href) {
+        console.log('Starting download for:', videoUrl);
+        
+        try {
+            // Créer un lien de téléchargement
+            const downloadLink = document.createElement('a');
+            downloadLink.href = videoUrl;
+            downloadLink.download = `highlight-${highlightId}.mp4`;
+            downloadLink.style.display = 'none';
+            downloadLink.target = '_blank'; // For cross-origin videos
+            
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            console.log('Download triggered');
+            
+            // Feedback visuel
+            const downloadBtn = highlight.querySelector('.download-btn');
+            if (downloadBtn) {
+                const originalHTML = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-check"></i><span class="action-count">Téléchargé!</span>';
+                
+                setTimeout(() => {
+                    downloadBtn.innerHTML = originalHTML;
+                }, 2000);
+                
+                // Show success message
+                showCustomAlert('Téléchargement', 'Le téléchargement de la vidéo a commencé', 'success');
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            showCustomAlert('Erreur de téléchargement', 'Impossible de télécharger la vidéo', 'error');
+        }
+    } else {
+        console.error('No valid video source available');
+        showCustomAlert('Erreur', 'Vidéo non disponible pour le téléchargement', 'error');
+    }
+}
+
+function toggleCaption(highlightId) {
+    const highlight = document.querySelector(`[data-highlight-id="${highlightId}"]`);
+    const caption = highlight.querySelector('.caption');
+    const showMoreBtn = highlight.querySelector('.show-more-btn');
+    
+    if (caption.style.webkitLineClamp) {
+        caption.style.webkitLineClamp = '';
+        showMoreBtn.innerHTML = '<i class="fas fa-minus"></i>';
+    } else {
+        caption.style.webkitLineClamp = '2';
+        showMoreBtn.innerHTML = '<i class="fas fa-plus"></i>';
+    }
+}
+
+function viewProfile(username) {
+    window.location.href = `/profile/${username}/`;
+}
+
+function reportHighlight(highlightId) {
+    // Implémenter le signalement
+    showCustomAlert('Signalement', 'Fonctionnalité de signalement à implémenter', 'info');
+}
+
+function deleteHighlight(highlightId) {
+    // For now, use confirm but later we can create a custom confirmation dialog
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce highlight ?')) {
+        // Supprimer le highlight
+        fetch(`/highlights/${highlightId}/delete/`, {
+            method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        }).then(response => {
+            if (response.ok) {
+                showCustomAlert('Suppression', 'Highlight supprimé avec succès', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showCustomAlert('Erreur', 'Impossible de supprimer le highlight', 'error');
+            }
+        }).catch(error => {
+            console.error('Erreur:', error);
+            showCustomAlert('Erreur', 'Erreur de connexion', 'error');
+        });
+    }
+}
+
+// Fonction pour obtenir le cookie CSRF - AMÉLIORÉE
+function getCookie(name) {
+    // Essayer d'abord depuis la meta tag
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    if (metaToken && name === 'csrftoken') {
+        return metaToken.getAttribute('content');
+    }
+    
+    // Fallback vers les cookies
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    
+    // Dernière tentative avec csrfmiddlewaretoken
+    if (!cookieValue && name === 'csrftoken') {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) {
+            cookieValue = csrfInput.value;
+        }
+    }
+    
+    return cookieValue;
+}
+
+// Gestion des erreurs vidéo
+document.addEventListener('error', function(e) {
+    if (e.target.tagName === 'VIDEO') {
+        console.error('Erreur vidéo:', e.target.error);
+        // Afficher une image de fallback ou un message d'erreur
+        const videoContainer = e.target.closest('.video-container');
+        if (videoContainer) {
+            videoContainer.innerHTML = `
+                <div class="video-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Erreur de chargement de la vidéo</p>
+                </div>
+            `;
+        }
+    }
+}, true);
+
+// Auto-hide des menus au clic en dehors
+document.addEventListener('click', function(event) {
+    // Fermer le menu des options
+    if (!event.target.closest('.more-options-btn') && !event.target.closest('.more-options-menu')) {
+        document.querySelectorAll('.more-options-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+    }
+});
+
+// Gestion du responsive pour les flèches de navigation
+window.addEventListener('resize', function() {
+    const navArrows = document.querySelector('.navigation-arrows');
+    if (window.innerWidth <= 768) {
+        navArrows.style.display = 'none';
+    } else {
+        navArrows.style.display = 'flex';
+    }
+});
+
+// Amélioration : Auto-pause des vidéos lors du scroll - OPTIMISÉ POUR ÉVITER PAUSE AU HOVER
+let scrollTimeout;
+let isUserScrolling = false;
+let lastScrollTop = 0;
+
+document.querySelector('.highlights-viewer').addEventListener('scroll', function() {
+    const currentScrollTop = this.scrollTop;
+    const scrollDelta = Math.abs(currentScrollTop - lastScrollTop);
+    
+    // Only pause if there's significant scrolling (not just hover/mouse movement)
+    // AND we're not just hovering over the video
+    if (scrollDelta > 50 && !isMouseOverVideo) {
+        clearTimeout(scrollTimeout);
+        isUserScrolling = true;
+        
+        // Pause toutes les vidéos pendant le scroll significatif
+        document.querySelectorAll('video').forEach(video => {
+            if (!video.paused) {
+                video.pause();
+            }
+        });
+        
+        // Reprendre la lecture après l'arrêt du scroll
+        scrollTimeout = setTimeout(() => {
+            isUserScrolling = false;
+            const currentVideo = highlights[currentHighlightIndex]?.querySelector('video');
+            if (currentVideo && !isUserScrolling) {
+                currentVideo.play().catch(e => console.log('Autoplay prevented:', e));
+            }
+        }, 500); // Délai réduit pour une reprise plus rapide
+    }
+    
+    lastScrollTop = currentScrollTop;
+});
+
+// Préchargement intelligent des vidéos
+function preloadNearbyVideos() {
+    const currentIndex = currentHighlightIndex;
+    const preloadRange = 2; // Précharger les 2 vidéos suivantes et précédentes
+    
+    highlights.forEach((highlight, index) => {
+        if (Math.abs(index - currentIndex) <= preloadRange) {
+            const video = highlight.querySelector('video');
+            if (video) {
+                // S'assurer que la vidéo a une source
+                if (!video.src) {
+                    const originalSrc = video.getAttribute('data-original-src');
+                    if (originalSrc) {
+                        video.src = originalSrc;
+                        video.load();
+                    }
+                }
+                // Précharger les métadonnées
+                if (video.readyState < 1) {
+                    video.preload = 'metadata';
+                }
+            }
+        }
+    });
+}
+
+// Amélioration : Gestion de la mémoire pour les vidéos - OPTIMISÉE
+function optimizeVideoMemory() {
+    highlights.forEach((highlight, index) => {
+        if (Math.abs(index - currentHighlightIndex) > 3) { // Augmenté à 3 pour éviter les problèmes
+            const video = highlight.querySelector('video');
+            if (video) {
+                video.pause();
+                video.currentTime = 0;
+                // Ne pas supprimer la source pour éviter les problèmes de chargement
+                // video.src = '';
+                // video.load();
+            }
+        }
+    });
+}
+
+// Optimiser la mémoire toutes les 60 secondes (réduit la fréquence)
+setInterval(optimizeVideoMemory, 60000);
+
+// Amélioration : Détection de la visibilité des highlights
+function isHighlightVisible(highlight) {
+    const rect = highlight.getBoundingClientRect();
+    const container = document.getElementById('highlightsViewer');
+    const containerRect = container.getBoundingClientRect();
+    
+    return rect.top >= containerRect.top && rect.bottom <= containerRect.bottom;
+}
+
+// Amélioration : Gestion intelligente de la lecture vidéo - NON INTRUSIVE
+function manageVideoPlayback() {
+    // Only run if not currently scrolling to avoid conflicts
+    if (isUserScrolling) return;
+    
+    highlights.forEach((highlight, index) => {
+        const video = highlight.querySelector('video');
+        if (video) {
+            // Ensure video has proper source
+            if (!video.src && video.getAttribute('data-original-src')) {
+                video.src = video.getAttribute('data-original-src');
+                video.load();
+            }
+            
+            // Précharger les métadonnées pour toutes les vidéos visibles
+            if (Math.abs(index - currentHighlightIndex) <= 2) {
+                if (video.readyState < 1) {
+                    video.preload = 'metadata';
+                }
+            }
+            
+            // Only manage playback for the current highlight to avoid conflicts
+            if (index === currentHighlightIndex && isHighlightVisible(highlight)) {
+                // Vidéo visible et active - la faire jouer SEULEMENT si elle n'est pas déjà en cours
+                if (video.paused && video.readyState >= 2) {
+                    video.play().catch(e => console.log('Autoplay prevented:', e));
+                }
+            }
+            // Don't automatically pause other videos unless they're far from current
+            else if (Math.abs(index - currentHighlightIndex) > 1) {
+                // Seulement mettre en pause les vidéos éloignées
+                if (!video.paused) {
+                    video.pause();
+                }
+            }
+        }
+    });
+}
+
+// Réduire la fréquence pour éviter les interférences (toutes les 2 secondes au lieu de 1)
+setInterval(manageVideoPlayback, 2000);
+
+// Amélioration : Gestion des erreurs de scroll
+function handleScrollError() {
+    const container = document.getElementById('highlightsViewer');
+    if (container) {
+        container.addEventListener('scroll', function() {
+            // Empêcher le scroll horizontal
+            if (this.scrollLeft !== 0) {
+                this.scrollLeft = 0;
+            }
+        });
+    }
+}
+
+// Initialiser la gestion des erreurs de scroll
+document.addEventListener('DOMContentLoaded', function() {
+    handleScrollError();
+});
+    </script>
+    
+    <!-- Script pour le système d'appréciation -->
+    <script src="{% static 'js/appreciation.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,502 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ group.name }} - BLIZZ{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Reset pour le chat */
+    .chat-page {
+        margin: 0;
+        padding: 0;
+        background-color: var(--dark-blue);
+    }
+    .chat-wrapper {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--dark-blue);
+    }
+    
+    /* En-tête */
+    .chat-header {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        box-shadow: 0 0 15px var(--primary-color);
+    }
+    
+    .btn-back {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: var(--text-color);
+        padding: 8px 12px;
+        border-radius: 25px;
+        border: 1px solid var(--primary-color);
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px var(--primary-color);
+        color: var(--text-color);
+        text-decoration: none;
+    }
+    
+    .group-info {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        margin: 0 20px;
+    }
+    
+    .group-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        margin-right: 12px;
+        object-fit: cover;
+    }
+    
+    .group-avatar.default {
+        background: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+    }
+    
+    .group-details h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .group-status {
+        margin: 2px 0 0 0;
+        color: #666;
+        font-size: 13px;
+    }
+    
+    .group-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* Zone des messages */
+    .messages-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #f5f5f5;
+    }
+    
+    .message {
+        max-width: 75%;
+        word-wrap: break-word;
+    }
+    
+    .message.own {
+        align-self: flex-end;
+        background: #007bff;
+        color: white;
+        padding: 10px 14px;
+        border-radius: 15px 15px 3px 15px;
+    }
+    
+    .message.other {
+        align-self: flex-start;
+        background: white;
+        color: #333;
+        padding: 10px 14px;
+        border-radius: 15px 15px 15px 3px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .message-sender {
+        font-size: 12px;
+        font-weight: 600;
+        color: #007bff;
+        margin-bottom: 4px;
+    }
+    
+    .message-content {
+        line-height: 1.4;
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+    
+    .message-time {
+        font-size: 11px;
+        opacity: 0.7;
+        text-align: right;
+    }
+    
+    .message.other .message-time {
+        color: #666;
+    }
+
+    .message-input-area {
+        background: white;
+        padding: 15px 20px;
+        border-top: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    /* Zone de saisie */
+    .message-input-area {
+        background: white;
+        padding: 15px;
+        border-top: 1px solid #ddd;
+        flex-shrink: 0;
+    }
+    
+    .message-input-area form {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+    
+    .message-input {
+        flex: 1;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        padding: 10px 15px;
+        resize: none;
+        font-family: inherit;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s;
+        min-height: 40px;
+        max-height: 80px;
+    }
+    
+    .message-input:focus {
+        border-color: #007bff;
+    }
+    
+    .send-button {
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    
+    .send-button:hover:not(:disabled) {
+        background: #0056b3;
+        transform: scale(1.05);
+    }
+    
+    .send-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .emoji-picker {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .emoji-picker:hover {
+        background: rgba(102, 126, 234, 0.1);
+    }
+
+    .empty-chat {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .empty-chat i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-chat h3 {
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    /* Scrollbar personnalisée */
+    .messages-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .messages-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    @media (max-width: 768px) {
+        .message {
+            max-width: 85%;
+        }
+        
+        .group-chat-header {
+            padding: 12px 15px;
+        }
+        
+        .group-actions {
+            display: none;
+        }
+        
+        .messages-container {
+            padding: 15px;
+        }
+        
+        .message-input-container {
+            padding: 12px 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>document.body.classList.add('chat-page');</script>
+
+<div class="chat-wrapper">
+    <!-- En-tête -->
+    <div class="chat-header">
+        <a href="{% url 'group_list' %}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        
+        <div class="group-info">
+            {% if group.avatar %}
+                <img src="{{ group.avatar.url }}" alt="{{ group.name }}" class="group-avatar">
+            {% else %}
+                <div class="group-avatar default">
+                    <i class="fas fa-users"></i>
+                </div>
+            {% endif %}
+            
+            <div class="group-details">
+                <h3>{{ group.name }} {% if membership.is_admin %}<i class="fas fa-crown" style="color: gold; font-size: 12px;"></i>{% endif %}</h3>
+                <p class="group-status">{{ members_count }} membre{{ members_count|pluralize }}</p>
+            </div>
+        </div>
+        
+        <div class="group-actions">
+            <a href="{% url 'group_members' group.id %}" class="btn-back" style="font-size: 12px; padding: 5px 8px;">
+                <i class="fas fa-users"></i>
+            </a>
+            {% if membership.is_admin %}
+                <a href="{% url 'group_settings' group.id %}" class="btn-back" style="font-size: 12px; padding: 5px 8px;">
+                    <i class="fas fa-cog"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages-area" id="messagesArea">
+        {% for message in messages %}
+            <div class="message {% if message.sender == request.user %}own{% else %}other{% endif %}">
+                {% if message.sender != request.user %}
+                    <div class="message-sender">{{ message.sender.username }}</div>
+                {% endif %}
+                <div class="message-content">{{ message.content }}</div>
+                <div class="message-time">{{ message.created_at|date:"H:i" }}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Zone de saisie -->
+    <div class="message-input-area">
+        <form id="chatForm">
+            {% csrf_token %}
+            <textarea 
+                id="messageInput" 
+                class="message-input" 
+                placeholder="Tapez votre message..."
+                rows="1"></textarea>
+            <button type="submit" id="sendBtn" class="send-button">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+const groupId = '{{ group.id }}';
+const messagesArea = document.getElementById('messagesArea');
+const messageInput = document.getElementById('messageInput');
+const chatForm = document.getElementById('chatForm');
+const sendBtn = document.getElementById('sendBtn');
+    
+// Auto-resize textarea
+messageInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+    sendBtn.disabled = !this.value.trim();
+});
+
+// Envoi avec Enter
+messageInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Soumission du formulaire
+chatForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    sendMessage();
+});
+    
+// Fonction d'envoi de message simplifiée
+function sendMessage() {
+    const content = messageInput.value.trim();
+    if (!content) return;
+    
+    // Désactiver temporairement
+    sendBtn.disabled = true;
+    messageInput.disabled = true;
+    
+    // Préparer les données
+    const formData = new FormData();
+    formData.append('content', content);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    // Envoyer
+    fetch(`/chat/group/${groupId}/send/`, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Ajouter le message immédiatement
+            addMessage(data.message.content, true, data.message.created_at, data.message.sender);
+            // Vider le champ
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+        } else {
+            alert('Erreur: ' + (data.error || 'Envoi échoué'));
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur de connexion');
+    })
+    .finally(() => {
+        // Réactiver
+        sendBtn.disabled = false;
+        messageInput.disabled = false;
+        messageInput.focus();
+    });
+}
+    
+// Fonction simple pour ajouter un message
+function addMessage(content, isOwn, time, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+    
+    let messageHTML = '';
+    if (!isOwn && sender) {
+        messageHTML += `<div class="message-sender">${escapeHtml(sender)}</div>`;
+    }
+    messageHTML += `
+        <div class="message-content">${escapeHtml(content)}</div>
+        <div class="message-time">${time}</div>
+    `;
+    
+    messageDiv.innerHTML = messageHTML;
+    messagesArea.appendChild(messageDiv);
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+    
+// Échapper le HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+    
+// Initialisation
+sendBtn.disabled = true;
+messageInput.focus();
+
+// Auto-refresh simple des messages groupe toutes les 5s
+function fetchGroupMessages() {
+    fetch(`/chat/group/${groupId}/messages/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+        .then(r => r.json())
+        .then(data => {
+            if (!data.messages) return;
+            messagesArea.innerHTML = '';
+            data.messages.forEach(m => {
+                const isOwn = m.is_own;
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+                if (!isOwn && m.sender) {
+                    const senderDiv = document.createElement('div');
+                    senderDiv.className = 'message-sender';
+                    senderDiv.textContent = m.sender;
+                    messageDiv.appendChild(senderDiv);
+                }
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = m.content;
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = m.created_at;
+                messageDiv.appendChild(contentDiv);
+                messageDiv.appendChild(timeDiv);
+                messagesArea.appendChild(messageDiv);
+            });
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        })
+        .catch(() => {});
+}
+setInterval(fetchGroupMessages, 5000);
+fetchGroupMessages();
+
+// Scroll initial vers le bas au chargement
+window.addEventListener('load', function() {
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+});
+</script>
+{% endblock %}

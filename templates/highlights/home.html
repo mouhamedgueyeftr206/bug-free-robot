@@ -1,0 +1,615 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="highlights-container">
+    <!-- Header des Highlights -->
+    <div class="highlights-header">
+        <h1 class="highlights-title">
+            <i class="fas fa-fire"></i>
+            Highlights
+        </h1>
+        <p class="highlights-subtitle">Découvrez des moments uniques qui disparaissent en 48h</p>
+    </div>
+
+    <!-- Navigation des Highlights -->
+    <div class="highlights-nav">
+        <a href="{% url 'highlights_for_you' %}" class="nav-tab {% if request.resolver_match.url_name == 'highlights_for_you' %}active{% endif %}">
+            <i class="fas fa-heart"></i>
+            Pour Toi
+        </a>
+        <a href="{% url 'highlights_friends' %}" class="nav-tab {% if request.resolver_match.url_name == 'highlights_friends' %}active{% endif %}">
+            <i class="fas fa-users"></i>
+            Amis
+        </a>
+        <a href="{% url 'highlights_search' %}" class="nav-tab {% if request.resolver_match.url_name == 'highlights_search' %}active{% endif %}">
+            <i class="fas fa-search"></i>
+            Rechercher
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'create_highlight' %}" class="nav-tab create-tab">
+            <i class="fas fa-plus"></i>
+            Créer
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Barre de recherche -->
+    <div class="search-section">
+        <form method="GET" action="{% url 'highlights_search' %}" class="search-form">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" name="q" placeholder="Rechercher des highlights, hashtags ou utilisateurs..." class="search-input">
+                <button type="submit" class="search-button">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Hashtags populaires -->
+    {% if popular_hashtags %}
+    <div class="hashtags-section">
+        <h3 class="section-title">🔥 Hashtags populaires</h3>
+        <div class="hashtags-grid">
+            {% for hashtag, count in popular_hashtags %}
+            <a href="{% url 'highlights_hashtag' hashtag=hashtag %}" class="hashtag-tag">
+                #{{ hashtag }}
+                <span class="hashtag-count">{{ count }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Highlights récents -->
+    {% if recent_highlights %}
+    <div class="recent-highlights">
+        <h3 class="section-title">⚡ Highlights récents</h3>
+        <div class="highlights-grid">
+            {% for highlight in recent_highlights %}
+            <div class="highlight-card">
+                <div class="highlight-video-container">
+                    <video class="highlight-video" preload="metadata" poster="{{ highlight.video.url }}">
+                        <source src="{{ highlight.video.url }}" type="video/mp4">
+                    </video>
+                    <div class="highlight-overlay">
+                        <div class="highlight-info">
+                            <div class="highlight-author">
+                                <img src="{{ highlight.author.profile.profileimg.url|default:'/static/images/default.png' }}" alt="{{ highlight.author.username }}" class="author-avatar">
+                                <span class="author-name">{{ highlight.author.username }}</span>
+                            </div>
+                            <div class="highlight-stats">
+                                <span class="stat">
+                                    <i class="fas fa-heart"></i>
+                                    {{ highlight.appreciations_count }}
+                                </span>
+                                <span class="stat">
+                                    <i class="fas fa-comment"></i>
+                                    {{ highlight.comments_count }}
+                                </span>
+                                <span class="stat">
+                                    <i class="fas fa-eye"></i>
+                                    {{ highlight.views.count }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="highlight-time">
+                            <i class="fas fa-clock"></i>
+                            {{ highlight.created_at|timesince }}
+                        </div>
+                    </div>
+                </div>
+                <div class="highlight-caption">
+                    <p>{{ highlight.caption|truncatechars:100 }}</p>
+                    {% if highlight.hashtags %}
+                    <div class="highlight-hashtags">
+                        {% for hashtag in highlight.hashtags %}
+                        <a href="{% url 'highlights_hashtag' hashtag=hashtag %}" class="hashtag">#{{ hashtag }}</a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <a href="{% url 'highlight_detail' highlight_id=highlight.id %}" class="highlight-link">
+                    Voir le highlight
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Statistiques utilisateur -->
+    {% if user.is_authenticated and user_stats %}
+    <div class="user-stats-section">
+        <h3 class="section-title">📊 Vos statistiques</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-video stat-icon"></i>
+                <div class="stat-content">
+                    <span class="stat-number">{{ user_stats.highlights_count }}</span>
+                    <span class="stat-label">Highlights</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-users stat-icon"></i>
+                <div class="stat-content">
+                    <span class="stat-number">{{ user_stats.subscribers_count }}</span>
+                    <span class="stat-label">Abonnés</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-user-plus stat-icon"></i>
+                <div class="stat-content">
+                    <span class="stat-number">{{ user_stats.subscriptions_count }}</span>
+                    <span class="stat-label">Abonnements</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Call to action pour les utilisateurs non connectés -->
+    {% if not user.is_authenticated %}
+    <div class="cta-section">
+        <div class="cta-content">
+            <h3>🎬 Rejoignez la communauté Highlights</h3>
+            <p>Créez, partagez et découvrez des moments uniques avec vos amis</p>
+            <div class="cta-buttons">
+                <a href="{% url 'signup' %}" class="cta-button primary">
+                    <i class="fas fa-user-plus"></i>
+                    Créer un compte
+                </a>
+                <a href="{% url 'signin' %}" class="cta-button secondary">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Se connecter
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .highlights-container {
+    max-width: 1200px;
+    margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .highlights-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .highlights-title {
+    font-family: 'RussoOne', sans-serif;
+        font-size: 3rem;
+        color: var(--primary-color);
+        text-shadow: 0 0 20px var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .highlights-subtitle {
+        font-size: 1.2rem;
+    color: var(--text-color);
+    opacity: 0.8;
+    }
+
+.highlights-nav {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .nav-tab {
+        padding: 1rem 2rem;
+    background: rgba(108, 92, 231, 0.1);
+    border: 2px solid var(--primary-color);
+        border-radius: 25px;
+    color: var(--text-color);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-tab:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px var(--primary-color);
+    }
+
+    .nav-tab.active {
+    background: var(--primary-color);
+        box-shadow: 0 0 20px var(--primary-color);
+    }
+
+.create-tab {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    border-color: #ff6b6b;
+}
+
+.create-tab:hover {
+    background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+    box-shadow: 0 5px 20px #ff6b6b;
+}
+
+.search-section {
+        margin-bottom: 3rem;
+    }
+
+.search-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 1rem 1rem 1rem 3rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--primary-color);
+    border-radius: 25px;
+    color: var(--text-color);
+    font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+.search-input:focus {
+    outline: none;
+        box-shadow: 0 0 20px var(--primary-color);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.search-button {
+    position: absolute;
+    right: 0.5rem;
+    padding: 0.8rem;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.search-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px var(--primary-color);
+}
+
+.hashtags-section {
+    margin-bottom: 3rem;
+}
+
+.section-title {
+        font-family: 'RussoOne', sans-serif;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.hashtags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.hashtag-tag {
+    padding: 0.5rem 1rem;
+    background: rgba(108, 92, 231, 0.2);
+    border: 1px solid var(--primary-color);
+    border-radius: 20px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hashtag-tag:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--primary-color);
+}
+
+.hashtag-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    }
+
+    .recent-highlights {
+        margin-bottom: 3rem;
+    }
+
+.highlights-grid {
+        display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    }
+
+.highlight-card {
+    background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--primary-color);
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+.highlight-card:hover {
+        transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(108, 92, 231, 0.3);
+}
+
+.highlight-video-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.highlight-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .highlight-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        padding: 1rem;
+        color: white;
+    }
+
+.highlight-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+    .highlight-author {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+.author-avatar {
+    width: 30px;
+    height: 30px;
+        border-radius: 50%;
+    border: 2px solid var(--primary-color);
+}
+
+.author-name {
+    font-weight: bold;
+    }
+
+    .highlight-stats {
+        display: flex;
+        gap: 1rem;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.highlight-time {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+.highlight-caption {
+    padding: 1rem;
+}
+
+.highlight-caption p {
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.highlight-hashtags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.hashtag {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.hashtag:hover {
+    text-shadow: 0 0 10px var(--primary-color);
+}
+
+.highlight-link {
+    display: block;
+    padding: 1rem;
+    background: var(--primary-color);
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.highlight-link:hover {
+    background: white;
+    color: var(--primary-color);
+}
+
+.user-stats-section {
+    margin-bottom: 3rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.stat-card {
+    background: rgba(108, 92, 231, 0.1);
+    border: 1px solid var(--primary-color);
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(108, 92, 231, 0.3);
+}
+
+.stat-icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+    .cta-section {
+    background: linear-gradient(45deg, rgba(108, 92, 231, 0.1), rgba(162, 155, 254, 0.1));
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 3rem;
+        text-align: center;
+}
+
+.cta-content h3 {
+    font-family: 'RussoOne', sans-serif;
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.cta-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    }
+
+    .cta-button {
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+        transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cta-button.primary {
+    background: var(--primary-color);
+        color: white;
+}
+
+.cta-button.primary:hover {
+    background: white;
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px var(--primary-color);
+}
+
+.cta-button.secondary {
+    background: transparent;
+        color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.cta-button.secondary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px var(--primary-color);
+    }
+
+    @media (max-width: 768px) {
+        .highlights-container {
+            padding: 1rem;
+        }
+        
+        .highlights-title {
+            font-size: 2rem;
+        }
+        
+    .highlights-nav {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .nav-tab {
+            width: 100%;
+            max-width: 300px;
+            justify-content: center;
+        }
+        
+    .highlights-grid {
+            grid-template-columns: 1fr;
+        }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cta-button {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

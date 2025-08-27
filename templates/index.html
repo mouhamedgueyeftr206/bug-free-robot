@@ -1,0 +1,949 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="carousel">
+    <div class="carousel-item">
+        <img src="../media/img1.png" alt="Image 1">
+        <div class="carousel-text">Achetez des comptes</div>
+    </div>
+    <div class="carousel-item">
+        <img src="../media/img2.png" alt="Image 2">
+        <div class="carousel-text">Vendez des comptes</div>
+    </div>
+    <div class="carousel-item">
+        <img src="../media/img3.png" alt="Image 3">
+        <div class="carousel-text">Achetez et vendez des comptes</div>
+    </div>
+    <div class="carousel-item">
+        <img src="../media/img4.png" alt="Image 4">
+        <div class="carousel-text">Et surtout,<br>amusez vous</div>
+    </div>
+</div>
+
+<!-- Alerte pour les vendeurs qui n'ont pas configuré leurs informations de paiement -->
+{% if not payment_info_configured %}
+<div class="payment-alert">
+    <div class="alert-content">
+        <div class="alert-icon">
+            <i class="fas fa-credit-card"></i>
+        </div>
+        <div class="alert-text">
+            <h3>Configuration requise pour vendre</h3>
+            <p>Pour pouvoir vendre des comptes, vous devez d'abord configurer vos informations de paiement. Cela nous permet de vous verser votre argent en toute sécurité.</p>
+        </div>
+        <div class="alert-actions">
+            <a href="{% url 'seller_payment_setup' %}" class="btn-configure">
+                <i class="fas fa-cog"></i>
+                Configurer maintenant
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="characters-section">
+    <h2 class="section-title">🎮 Boutique Comptes Gaming 🛒</h2>
+    
+    <!-- Filtres des produits -->
+    <div class="filters-section">
+        <div class="filters-header" onclick="toggleFilters()">
+            <h3><i class="fas fa-filter"></i> Filtrer les produits</h3>
+            <button class="toggle-filters" onclick="event.stopPropagation()">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+        
+        <form method="GET" class="filters-form" id="filtersForm">
+            <div class="filters-grid">
+                <!-- Filtre par jeu -->
+                <div class="filter-group">
+                    <label for="game">Jeu</label>
+                    <select name="game" id="game">
+                        <option value="all">Tous les jeux</option>
+                        {% for value, label in game_choices %}
+                            <option value="{{ value }}" {% if current_filters.game == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Filtre par prix -->
+                <div class="filter-group">
+                    <label>Prix (€)</label>
+                    <div class="price-range">
+                        <input type="number" name="price_min" placeholder="Min" value="{{ current_filters.price_min }}" step="0.01">
+                        <span>-</span>
+                        <input type="number" name="price_max" placeholder="Max" value="{{ current_filters.price_max }}" step="0.01">
+                    </div>
+                </div>
+                
+                <!-- Filtre par pièces -->
+                <div class="filter-group">
+                    <label for="coins">Pièces/Coins</label>
+                    <input type="text" name="coins" id="coins" placeholder="Ex: 5000, UC, V-Bucks" value="{{ current_filters.coins }}">
+                </div>
+                
+                <!-- Filtre par niveau -->
+                <div class="filter-group">
+                    <label for="level">Niveau</label>
+                    <input type="text" name="level" id="level" placeholder="Ex: 50, Diamant, Master" value="{{ current_filters.level }}">
+                </div>
+                
+                <!-- Filtre par date -->
+                <div class="filter-group">
+                    <label for="date">Date de publication</label>
+                    <select name="date" id="date">
+                        <option value="">Toutes les dates</option>
+                        <option value="today" {% if current_filters.date == 'today' %}selected{% endif %}>Aujourd'hui</option>
+                        <option value="week" {% if current_filters.date == 'week' %}selected{% endif %}>Cette semaine</option>
+                        <option value="month" {% if current_filters.date == 'month' %}selected{% endif %}>Ce mois</option>
+                    </select>
+                </div>
+                
+                <!-- Tri -->
+                <div class="filter-group">
+                    <label for="sort">Trier par</label>
+                    <select name="sort" id="sort">
+                        <option value="created_at" {% if current_filters.sort == 'created_at' %}selected{% endif %}>Plus récent</option>
+                        <option value="price_asc" {% if current_filters.sort == 'price_asc' %}selected{% endif %}>Prix croissant</option>
+                        <option value="price_desc" {% if current_filters.sort == 'price_desc' %}selected{% endif %}>Prix décroissant</option>
+                        <option value="title" {% if current_filters.sort == 'title' %}selected{% endif %}>Titre A-Z</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filters-actions">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i>
+                    Appliquer les filtres
+                </button>
+                <a href="{% url 'index' %}" class="btn-reset">
+                    <i class="fas fa-times"></i>
+                    Réinitialiser
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="character-grid">
+        {% for post in posts %}
+            {% if post.has_banner %}
+            <div class="character-card {% if post.is_in_transaction %}in-transaction{% endif %} {% if post.is_sold %}sold{% endif %}">
+                <div class="card-banner">
+                    {% if post.is_in_transaction %}
+                        <div class="transaction-overlay">
+                            <span class="transaction-badge">En transaction</span>
+                        </div>
+                    {% elif post.is_sold %}
+                        <div class="sold-overlay">
+                            <span class="sold-badge">Vendu</span>
+                        </div>
+                    {% endif %}
+                    <img src="{{ post.main_image.url }}" alt="Bannière du produit">
+                </div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="seller-info">
+                            <div class="profile-container">
+                                <img src="{{ post.author.profile.profileimg.url }}" alt="Photo de profil" class="seller-profile-img">
+                            </div>
+                            <span class="seller-name">@{{ post.author.username }}</span>
+                        </div>
+                        <span class="post-time">{{ post.time_since_created }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="game-type-badge">
+                            <i class="fas fa-gamepad"></i>
+                            {{ post.get_game_display_name }}
+                        </div>
+
+                        <div class="seller-badge-centered" style="text-align: center; margin-top: 0.2rem; margin-bottom: 0.5rem;">
+                            {% if post.user.userreputation %}
+                                {% with badge=post.user.userreputation.get_seller_badge %}
+                                    {% if badge %}
+                                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem;">
+                                            <span style="font-size: 0.7rem; color: #8B8B8B; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">{{ badge.name }}</span>
+                                            <img src="{% load static %}{% static 'badges/' %}{{ badge.icon }}" 
+                                                 alt="{{ badge.name }}" 
+                                                 style="width: 48px; height: 48px; object-fit: contain; user-select: none; pointer-events: none; -webkit-user-drag: none; -webkit-touch-callout: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));"
+                                                 oncontextmenu="return false;" ondragstart="return false;">
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <!-- Badge par défaut pour les vendeurs sans réputation -->
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem;">
+                                    <span style="font-size: 0.7rem; color: #8B8B8B; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">Vendeur Bronze</span>
+                                    <img src="{% load static %}{% static 'badges/bronze_badge.png' %}" 
+                                         alt="Vendeur Bronze" 
+                                         style="width: 48px; height: 48px; object-fit: contain; user-select: none; pointer-events: none; -webkit-user-drag: none; -webkit-touch-callout: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));"
+                                         oncontextmenu="return false;" ondragstart="return false;">
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-coins"></i>
+                                <span>{{ post.coins }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-trophy"></i>
+                                <span>Niveau {{ post.level }}</span>
+                            </div>
+                        </div>
+                        <h3 class="card-title">
+                            <a href="{% url 'product_detail' post.id %}">{{ post.title }}</a>
+                        </h3>
+                        <div class="card-price">{{ post.price }} €</div>
+                    </div>
+                    <div class="card-actions">
+                        <a href="{% url 'product_detail' post.id %}" class="card-button">
+                            <i class="fas fa-eye"></i>
+                            Voir
+                        </a>
+                        {% if user == post.author %}
+                        <a href="{% url 'delete_post' post.id %}" class="delete-button" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.characters-section {
+    padding: 4rem 2rem;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    font-family: 'RussoOne', sans-serif;
+    color: var(--primary-color);
+    text-shadow: 0 0 15px var(--primary-color);
+}
+
+.character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.product-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    height: 420px;
+    display: flex;
+    flex-direction: column;
+    max-height: 420px;
+    width: 380px;
+    margin: 0 auto;
+}
+
+.character-card.in-transaction {
+    filter: blur(1px);
+    opacity: 0.7;
+}
+
+.character-card.sold {
+    filter: grayscale(100%);
+    opacity: 0.6;
+}
+
+.card-banner {
+    position: relative;
+    width: 355px;
+    height: 200px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border-radius: 12px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.card-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+}
+
+.card-banner:hover img {
+    transform: scale(1.05);
+}
+
+.transaction-overlay, .sold-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.transaction-badge, .sold-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.sold-badge {
+    background: #dc3545;
+}
+
+.card-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.seller-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.profile-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid var(--primary-color);
+}
+
+.seller-profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.seller-text-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.seller-name {
+    color: white !important;
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.reputation-badge-name-home {
+    color: #aaa;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+.seller-badge-icon-home-large {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.seller-username {
+    color: #888;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.post-time {
+    color: #888;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.card-body {
+    margin-bottom: 1rem;
+    min-width: 0;
+}
+
+.game-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.game-type-badge i {
+    font-size: 0.9rem;
+}
+
+/* Section badge centrée sous le nom du jeu */
+.badge-section-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0.2rem 0;
+}
+
+.reputation-badge-name-home-centered {
+    color: #aaa;
+    font-size: 0.85rem;
+    font-style: italic;
+    text-align: center;
+    font-weight: 500;
+}
+
+.seller-badge-icon-home-centered {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.badge-with-image {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(45deg, rgba(108, 92, 231, 0.1), rgba(162, 155, 254, 0.1));
+    border: 1px solid var(--primary-color);
+    border-radius: 10px;
+    padding: 0.4rem 0.6rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(108, 92, 231, 0.2);
+}
+
+.badge-with-image:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+    background: linear-gradient(45deg, rgba(108, 92, 231, 0.15), rgba(162, 155, 254, 0.15));
+}
+
+.seller-badge-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(108, 92, 231, 0.3));
+}
+
+.badge-fallback {
+    font-size: 1rem;
+    color: var(--primary-color);
+    text-shadow: 0 0 5px var(--primary-color);
+}
+
+.badge-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.reputation-badge-name {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-shadow: 0 0 3px var(--primary-color);
+    line-height: 1;
+}
+
+.reputation-score {
+    font-size: 0.6rem;
+    color: var(--secondary-color);
+    font-weight: 500;
+    line-height: 1;
+}
+
+.card-stats {
+    display: flex;
+    gap: 0.8rem;
+    margin: 0.8rem 0;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: #fff;
+    border: 1px solid rgba(108, 92, 231, 0.3);
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+.stat-item i {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    flex-shrink: 0;
+}
+
+.stat-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+/* Styles pour les filtres */
+.filters-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+}
+
+.filters-header h3 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toggle-filters {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.toggle-filters.active {
+    transform: rotate(180deg);
+}
+
+.filters-form {
+    padding: 1.5rem;
+    display: none;
+}
+
+.filters-form.active {
+    display: block;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+}
+
+/* Éviter la superposition des champs input */
+.filter-group input:not([type="submit"]):not([type="button"]) {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+}
+
+/* S'assurer qu'il n'y a qu'un seul input visible par groupe */
+.filter-group input + input {
+    display: none !important;
+}
+
+.filter-group label {
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.filter-group select,
+.filter-group input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.8rem;
+    color: white;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(108, 92, 231, 0.3);
+}
+
+.filter-group select option {
+    background: var(--dark-blue);
+    color: white;
+}
+
+.price-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.price-range input {
+    flex: 1;
+}
+
+.price-range span {
+    color: white;
+    font-weight: bold;
+}
+
+.filters-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-filter,
+.btn-reset {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-filter {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.btn-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+}
+
+.btn-reset {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-reset:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.card-title a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-title a:hover {
+    color: var(--primary-color);
+}
+
+.card-price {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.card-button {
+    flex: 1;
+    padding: 0.8rem;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.card-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+}
+
+.delete-button {
+    padding: 0.8rem;
+    background: #dc3545;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.delete-button:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+.character-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 30px rgba(108, 92, 231, 0.3);
+}
+
+.character-card.in-transaction:hover,
+.character-card.sold:hover {
+    transform: none;
+}
+
+/* Recommandations de dimensions */
+.banner-recommendations {
+    background: rgba(108, 92, 231, 0.1);
+    border: 1px solid rgba(108, 92, 231, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.banner-recommendations h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.banner-recommendations p {
+    color: #ccc;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Styles pour l'alerte de paiement */
+.payment-alert {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 15px;
+    margin: 2rem auto;
+    max-width: 800px;
+    backdrop-filter: blur(10px);
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    padding: 2rem;
+    gap: 1.5rem;
+}
+
+.alert-icon {
+    font-size: 2rem;
+    color: #ffc107;
+}
+
+.alert-text h3 {
+    color: #ffc107;
+    margin-bottom: 0.5rem;
+}
+
+.alert-text p {
+    color: #ccc;
+    margin: 0;
+}
+
+.btn-configure {
+    background: #ffc107;
+    color: #000;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-configure:hover {
+    background: #e0a800;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .product-card {
+        margin: 0 auto;
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+        max-height: none;
+    }
+
+    .card-banner {
+        width: 320px;
+        height: 180px;
+        margin: 1rem auto 0;
+    }
+
+    .card-content {
+        padding: 1rem;
+    }
+
+    .card-title a {
+        font-size: 1rem;
+    }
+
+    .card-price {
+        font-size: 1.1rem;
+    }
+
+    .card-button {
+        font-size: 0.9rem;
+        padding: 0.6rem;
+    }
+
+    .stat-item {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .game-type-badge {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .no-products {
+        padding: 2rem 1rem;
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+// Fonction pour afficher/masquer les filtres
+function toggleFilters() {
+    const filtersForm = document.getElementById('filtersForm');
+    const toggleButton = document.querySelector('.toggle-filters');
+    
+    if (filtersForm.classList.contains('active')) {
+        filtersForm.classList.remove('active');
+        toggleButton.classList.remove('active');
+    } else {
+        filtersForm.classList.add('active');
+        toggleButton.classList.add('active');
+    }
+}
+
+// Afficher les filtres par défaut si des filtres sont appliqués
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasFilters = urlParams.has('game') || urlParams.has('price_min') || 
+                      urlParams.has('price_max') || urlParams.has('coins') || 
+                      urlParams.has('level') || urlParams.has('date') || 
+                      (urlParams.has('sort') && urlParams.get('sort') !== 'created_at');
+    
+    if (hasFilters) {
+        const filtersForm = document.getElementById('filtersForm');
+        const toggleButton = document.querySelector('.toggle-filters');
+        filtersForm.classList.add('active');
+        toggleButton.classList.add('active');
+    }
+});
+
+// Soumission automatique des filtres lors du changement
+document.querySelectorAll('#filtersForm select').forEach(select => {
+    select.addEventListener('change', function() {
+        // Optionnel: soumettre automatiquement le formulaire
+        // document.getElementById('filtersForm').submit();
+    });
+});
+</script>
+
+{% endblock %}

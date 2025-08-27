@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat - BLIZZ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--dark-blue);
+        min-height: 100vh;
+    }
+
+    .chat-header {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 0 15px var(--primary-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .chat-header h1 {
+        color: var(--text-color);
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-shadow: 0 0 15px var(--primary-color);
+    }
+
+    .chat-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: var(--text-color);
+        border: 2px solid var(--primary-color);
+        padding: 12px 20px;
+        border-radius: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px var(--primary-color);
+        font-size: 14px;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px var(--primary-color);
+        color: var(--text-color);
+        text-decoration: none;
+        background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+    }
+
+    .action-btn i {
+        font-size: 16px;
+    }
+
+    .chat-list {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 0 15px var(--primary-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .conversation-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 15px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        background: linear-gradient(135deg, rgba(108, 92, 231, 0.08), rgba(118, 75, 162, 0.05));
+        position: relative;
+        overflow: hidden;
+    }
+
+    .conversation-item:hover {
+        background: linear-gradient(135deg, rgba(108, 92, 231, 0.15), rgba(118, 75, 162, 0.1));
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(108, 92, 231, 0.3);
+    }
+
+    .conversation-avatar {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        margin-right: 15px;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .conversation-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+    }
+
+    .default-avatar {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 20px;
+        border-radius: 50%;
+        border: 3px solid var(--primary-color);
+    }
+
+    .conversation-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .conversation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3px;
+    }
+
+    .conversation-header h4 {
+        font-weight: 600;
+        color: var(--text-color);
+        margin: 0;
+        font-size: 16px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .conversation-time {
+        font-size: 12px;
+        color: var(--muted-color);
+        flex-shrink: 0;
+        margin-left: 10px;
+    }
+
+    .conversation-preview {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .message-preview {
+        color: var(--muted-color);
+        font-size: 14px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        flex: 1;
+    }
+
+    .unread-badge {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        color: white;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: bold;
+        flex-shrink: 0;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .conversation-link {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        text-decoration: none;
+        z-index: 1;
+    }
+
+    .chat-type-badge {
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+
+    .badge-private {
+        background: rgba(108, 92, 231, 0.3);
+        color: var(--primary-color);
+    }
+
+    .badge-group {
+        background: rgba(162, 155, 254, 0.3);
+        color: var(--secondary-color);
+    }
+
+    .chat-last-message {
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 14px;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .unread-badge {
+        background: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: #764ba2;
+        margin-bottom: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .chat-container {
+            padding: 10px;
+        }
+        
+        .chat-actions {
+            flex-direction: column;
+        }
+        
+        .btn-chat {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <h1>
+            <i class="fas fa-comments"></i>
+            Mes Conversations
+        </h1>
+        <div class="chat-actions">
+            <a href="{% url 'user_search' %}" class="action-btn">
+                <i class="fas fa-search"></i>
+                <span>Rechercher utilisateurs</span>
+            </a>
+            <a href="{% url 'group_list' %}" class="action-btn">
+                <i class="fas fa-users"></i>
+                <span>Mes groupes</span>
+            </a>
+            <a href="{% url 'friend_requests' %}" class="action-btn">
+                <i class="fas fa-user-friends"></i>
+                <span>Mes demandes d'ami</span>
+            </a>
+            <a href="{% url 'create_group' %}" class="action-btn">
+                <i class="fas fa-plus-circle"></i>
+                <span>Créer un groupe</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="chat-list">
+        {% if conversations %}
+            {% for conv_data in conversations %}
+                <div class="conversation-item">
+                    <div class="conversation-avatar">
+                        {% if conv_data.other_user.profile.profileimg %}
+                            <img src="{{ conv_data.other_user.profile.profileimg.url }}" alt="{{ conv_data.other_user.username }}">
+                        {% else %}
+                            <div class="default-avatar">
+                                {{ conv_data.other_user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="conversation-info">
+                        <div class="conversation-header">
+                            <h4>{{ conv_data.other_user.username }}</h4>
+                            {% if conv_data.last_message %}
+                                <span class="conversation-time">{{ conv_data.last_message.created_at|timesince }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="conversation-preview">
+                            {% if conv_data.last_message %}
+                                <span class="message-preview">{{ conv_data.last_message.content|truncatechars:50 }}</span>
+                            {% else %}
+                                <span class="message-preview">Aucun message</span>
+                            {% endif %}
+                            {% if conv_data.unread_count > 0 %}
+                                <span class="unread-badge">{{ conv_data.unread_count }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'private_chat' conv_data.other_user.id %}" class="conversation-link"></a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>Aucune conversation</h3>
+                <p>Commencez par rechercher des utilisateurs ou créer un groupe pour démarrer une conversation.</p>
+                <div style="margin-top: 20px;">
+                    <a href="{% url 'user_search' %}" class="action-btn">
+                        <i class="fas fa-search"></i>
+                        Rechercher des utilisateurs
+                    </a>
+                    <a href="{% url 'friend_requests' %}" class="action-btn">
+                        <i class="fas fa-user-friends"></i>
+                        Mes demandes d'amis
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh des conversations toutes les 30 secondes
+    setInterval(function() {
+        // Recharger la page pour mettre à jour les conversations
+        // Dans une implémentation plus avancée, on utiliserait AJAX ou WebSockets
+        if (document.visibilityState === 'visible') {
+            location.reload();
+        }
+    }, 30000);
+</script>
+{% endblock %}

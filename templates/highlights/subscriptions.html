@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mes Abonnements - BLIZZ{% endblock %}
+
+{% block content %}
+<style>
+    .subscriptions-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        min-height: 100vh;
+    }
+
+    .subscriptions-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .subscriptions-title {
+        font-family: 'Halo', sans-serif;
+        color: var(--primary-color);
+        font-size: 2.5rem;
+        text-shadow: 0 0 15px var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .back-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 20px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+    }
+
+    .subscriptions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .subscription-card {
+        background: linear-gradient(145deg, rgba(15, 23, 41, 0.9), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .subscription-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 20px var(--primary-color);
+    }
+
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 3px solid var(--primary-color);
+        object-fit: cover;
+        margin: 0 auto 1rem;
+    }
+
+    .user-avatar.default {
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 2rem;
+    }
+
+    .user-name {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .subscription-date {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .user-stats {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .user-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .user-stat-number {
+        font-family: 'RussoOne', sans-serif;
+        color: var(--secondary-color);
+        font-size: 1.1rem;
+    }
+
+    .user-stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.8rem;
+    }
+
+    .subscription-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .btn-unsubscribe {
+        background: rgba(231, 76, 60, 0.2);
+        border: 1px solid #e74c3c;
+        color: #e74c3c;
+        padding: 0.5rem 1rem;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-unsubscribe:hover {
+        background: #e74c3c;
+        color: white;
+    }
+
+    .btn-view-profile {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 15px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-view-profile:hover {
+        background: var(--secondary-color);
+        color: white;
+        text-decoration: none;
+    }
+
+    .empty-subscriptions {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .empty-subscriptions i {
+        font-size: 4rem;
+        color: var(--primary-color);
+        margin-bottom: 2rem;
+        opacity: 0.7;
+    }
+
+    @media (max-width: 768px) {
+        .subscriptions-container {
+            padding: 1rem;
+        }
+        
+        .subscriptions-title {
+            font-size: 2rem;
+        }
+        
+        .subscriptions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="subscriptions-container">
+    <a href="{% url 'highlights_home' %}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Retour aux Highlights
+    </a>
+
+    <div class="subscriptions-header">
+        <h1 class="subscriptions-title">
+            <i class="fas fa-user-plus"></i>
+            Mes Abonnements
+        </h1>
+    </div>
+
+    {% if subscriptions %}
+    <div class="subscriptions-grid">
+        {% for subscription in subscriptions %}
+        <div class="subscription-card">
+            {% if subscription.subscribed_to.profile.profileimg %}
+            <img src="{{ subscription.subscribed_to.profile.profileimg.url }}" 
+                 alt="{{ subscription.subscribed_to.username }}" 
+                 class="user-avatar">
+            {% else %}
+            <div class="user-avatar default">
+                {{ subscription.subscribed_to.username|first|upper }}
+            </div>
+            {% endif %}
+            
+            <div class="user-name">@{{ subscription.subscribed_to.username }}</div>
+            <div class="subscription-date">
+                Abonné depuis {{ subscription.created_at|timesince }}
+            </div>
+            
+            <div class="user-stats">
+                <div class="user-stat">
+                    <span class="user-stat-number">{{ subscription.subscribed_to.highlights.count }}</span>
+                    <span class="user-stat-label">Highlights</span>
+                </div>
+                <div class="user-stat">
+                    <span class="user-stat-number">{{ subscription.subscribed_to.subscribers.count }}</span>
+                    <span class="user-stat-label">Abonnés</span>
+                </div>
+            </div>
+            
+            <div class="subscription-actions">
+                <a href="{% url 'profile' subscription.subscribed_to.username %}" class="btn-view-profile">
+                    <i class="fas fa-user"></i>
+                    Profil
+                </a>
+                <button class="btn-unsubscribe" data-user-id="{{ subscription.subscribed_to.id }}">
+                    <i class="fas fa-user-minus"></i>
+                    Se désabonner
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-subscriptions">
+        <i class="fas fa-user-plus"></i>
+        <h3>Aucun abonnement</h3>
+        <p>Vous ne suivez personne pour le moment</p>
+        <div style="margin-top: 2rem;">
+            <a href="{% url 'highlights_search' %}" class="btn-view-profile">
+                <i class="fas fa-search"></i>
+                Découvrir des créateurs
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Gestion du désabonnement
+document.addEventListener('DOMContentLoaded', function() {
+    const unsubscribeButtons = document.querySelectorAll('.btn-unsubscribe');
+    
+    unsubscribeButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const userName = this.closest('.subscription-card').querySelector('.user-name').textContent;
+            
+            if (confirm(`Êtes-vous sûr de vouloir vous désabonner de ${userName} ?`)) {
+                fetch(`/subscribe/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && !data.subscribed) {
+                        // Supprimer la carte avec animation
+                        const card = this.closest('.subscription-card');
+                        card.style.animation = 'fadeOut 0.5s ease-out';
+                        setTimeout(() => {
+                            card.remove();
+                            
+                            // Vérifier s'il reste des abonnements
+                            const remainingCards = document.querySelectorAll('.subscription-card');
+                            if (remainingCards.length === 0) {
+                                location.reload();
+                            }
+                        }, 500);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors du désabonnement');
+                });
+            }
+        });
+    });
+});
+
+// Animation CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

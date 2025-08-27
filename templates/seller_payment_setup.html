@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-container">
+    <div class="payment-setup-container">
+        <div class="setup-header">
+            <h1 class="setup-title">
+                <i class="fas fa-credit-card"></i>
+                Configuration Paiement Vendeur
+            </h1>
+            <p class="setup-subtitle">
+                Configurez vos informations de paiement pour recevoir votre argent
+            </p>
+        </div>
+
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="message {% if message.tags %}{{ message.tags }}{% endif %} glass-effect">
+                <i class="fas {% if message.tags == 'error' %}fa-exclamation-triangle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" class="payment-setup-form glass-effect">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Méthode de Paiement
+                </h3>
+                
+                <div class="payment-method-selector">
+                    <label class="method-option">
+                        <input type="radio" name="preferred_payment_method" value="mobile_money" 
+                               {% if payment_info.preferred_payment_method == 'mobile_money' %}checked{% endif %}>
+                        <div class="method-card">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Mobile Money</span>
+                        </div>
+                    </label>
+                    
+                    <label class="method-option">
+                        <input type="radio" name="preferred_payment_method" value="bank_transfer"
+                               {% if payment_info.preferred_payment_method == 'bank_transfer' %}checked{% endif %}>
+                        <div class="method-card">
+                            <i class="fas fa-university"></i>
+                            <span>Virement Bancaire</span>
+                        </div>
+                    </label>
+                    
+                    <label class="method-option">
+                        <input type="radio" name="preferred_payment_method" value="card"
+                               {% if payment_info.preferred_payment_method == 'card' %}checked{% endif %}>
+                        <div class="method-card">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Carte Bancaire</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Mobile Money Section -->
+            <div class="form-section mobile-money-section" id="mobile-money-section">
+                <h3 class="section-title">
+                    <i class="fas fa-mobile-alt"></i>
+                    Informations Mobile Money
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="operator">Opérateur Mobile Money *</label>
+                        <select name="operator" id="operator" class="form-control">
+                            <option value="">Sélectionnez un opérateur</option>
+                            <option value="orange_money" {% if payment_info.operator == 'orange_money' %}selected{% endif %}>Orange Money</option>
+                            <option value="mtn_momo" {% if payment_info.operator == 'mtn_momo' %}selected{% endif %}>MTN Mobile Money</option>
+                            <option value="moov_money" {% if payment_info.operator == 'moov_money' %}selected{% endif %}>Moov Money</option>
+                            <option value="wave" {% if payment_info.operator == 'wave' %}selected{% endif %}>Wave</option>
+                            <option value="free_money" {% if payment_info.operator == 'free_money' %}selected{% endif %}>Free Money</option>
+                            <option value="emoney" {% if payment_info.operator == 'emoney' %}selected{% endif %}>E-Money</option>
+                            <option value="airtel_money" {% if payment_info.operator == 'airtel_money' %}selected{% endif %}>Airtel Money</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone_number">Numéro de Téléphone *</label>
+                        <input type="tel" name="phone_number" id="phone_number" 
+                               value="{{ payment_info.phone_number|default:'' }}" 
+                               class="form-control" placeholder="+221 78 123 45 67">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Transfer Section -->
+            <div class="form-section bank-transfer-section" id="bank-transfer-section" style="display: none;">
+                <h3 class="section-title">
+                    <i class="fas fa-university"></i>
+                    Informations Bancaires
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bank_name">Nom de la Banque *</label>
+                        <input type="text" name="bank_name" id="bank_name" 
+                               value="{{ payment_info.bank_name|default:'' }}" 
+                               class="form-control" placeholder="Ex: BICIS">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="account_number">Numéro de Compte *</label>
+                        <input type="text" name="account_number" id="account_number" 
+                               value="{{ payment_info.account_number|default:'' }}" 
+                               class="form-control" placeholder="1234567890">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="account_holder_name">Nom du Titulaire *</label>
+                        <input type="text" name="account_holder_name" id="account_holder_name" 
+                               value="{{ payment_info.account_holder_name|default:'' }}" 
+                               class="form-control" placeholder="Nom et Prénom">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="swift_code">Code SWIFT</label>
+                        <input type="text" name="swift_code" id="swift_code" 
+                               value="{{ payment_info.swift_code|default:'' }}" 
+                               class="form-control" placeholder="BICISNCD">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="iban">IBAN</label>
+                    <input type="text" name="iban" id="iban" 
+                           value="{{ payment_info.iban|default:'' }}" 
+                           class="form-control" placeholder="SN123456789012345678901234">
+                </div>
+            </div>
+
+            <!-- Card Section -->
+            <div class="form-section card-section" id="card-section" style="display: none;">
+                <h3 class="section-title">
+                    <i class="fas fa-credit-card"></i>
+                    Informations Carte Bancaire
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="card_holder_name">Nom du Titulaire *</label>
+                        <input type="text" name="card_holder_name" id="card_holder_name" 
+                               value="{{ payment_info.card_holder_name|default:'' }}" 
+                               class="form-control" placeholder="Nom et Prénom">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="card_number">Numéro de Carte</label>
+                        <input type="text" name="card_number" id="card_number" 
+                               value="{{ payment_info.card_number|default:'' }}" 
+                               class="form-control" placeholder="1234 5678 9012 3456">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-globe"></i>
+                    Informations Géographiques
+                </h3>
+                
+                <div class="form-group">
+                    <label for="country">Pays *</label>
+                    <select name="country" id="country" class="form-control">
+                        <option value="SN" {% if payment_info.country == 'SN' %}selected{% endif %}>Sénégal</option>
+                        <option value="CI" {% if payment_info.country == 'CI' %}selected{% endif %}>Côte d'Ivoire</option>
+                        <option value="ML" {% if payment_info.country == 'ML' %}selected{% endif %}>Mali</option>
+                        <option value="BF" {% if payment_info.country == 'BF' %}selected{% endif %}>Burkina Faso</option>
+                        <option value="NE" {% if payment_info.country == 'NE' %}selected{% endif %}>Niger</option>
+                        <option value="TG" {% if payment_info.country == 'TG' %}selected{% endif %}>Togo</option>
+                        <option value="BJ" {% if payment_info.country == 'BJ' %}selected{% endif %}>Bénin</option>
+                        <option value="GN" {% if payment_info.country == 'GN' %}selected{% endif %}>Guinée</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <div class="primary-actions">
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i>
+                        Sauvegarder les Informations
+                    </button>
+                    
+                    <a href="{% url 'settings' %}" class="btn-cancel">
+                        <i class="fas fa-times"></i>
+                        Annuler
+                    </a>
+                </div>
+                
+                {% if payment_info.is_verified %}
+                <div class="secondary-actions">
+                    <button type="button" class="btn-reset" onclick="confirmReset()">
+                        <i class="fas fa-trash"></i>
+                        Réinitialiser les Informations
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.main-container {
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+}
+
+.payment-setup-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.setup-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.setup-title {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-family: 'RussoOne', sans-serif;
+    text-shadow: 0 0 15px var(--primary-color);
+}
+
+.setup-subtitle {
+    color: #ccc;
+    font-size: 1.1rem;
+}
+
+.payment-setup-form {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 3rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-section {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.section-title {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.payment-method-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.method-option {
+    cursor: pointer;
+}
+
+.method-option input[type="radio"] {
+    display: none;
+}
+
+.method-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.method-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.method-card span {
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.method-option input[type="radio"]:checked + .method-card {
+    border-color: var(--primary-color);
+    background: rgba(108, 92, 231, 0.1);
+    box-shadow: 0 0 20px rgba(108, 92, 231, 0.3);
+}
+
+.method-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Les styles pour les listes déroulantes sont maintenant dans base.html */
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.primary-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.secondary-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-save,
+.btn-cancel,
+.btn-reset {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-save {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+}
+
+.btn-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-reset {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        padding: 1rem;
+    }
+    
+    .payment-setup-form {
+        padding: 2rem;
+    }
+    
+    .form-section {
+        padding: 1.5rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .payment-method-selector {
+        grid-template-columns: 1fr;
+    }
+    
+    .primary-actions {
+        flex-direction: column;
+    }
+    
+    .setup-title {
+        font-size: 2rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const methodOptions = document.querySelectorAll('input[name="preferred_payment_method"]');
+    const mobileSection = document.getElementById('mobile-money-section');
+    const bankSection = document.getElementById('bank-transfer-section');
+    const cardSection = document.getElementById('card-section');
+
+    function showSection(section) {
+        // Cacher toutes les sections
+        mobileSection.style.display = 'none';
+        bankSection.style.display = 'none';
+        cardSection.style.display = 'none';
+        
+        // Afficher la section sélectionnée
+        if (section) {
+            section.style.display = 'block';
+        }
+    }
+
+    // Afficher la section initiale
+    const checkedMethod = document.querySelector('input[name="preferred_payment_method"]:checked');
+    if (checkedMethod) {
+        switch(checkedMethod.value) {
+            case 'mobile_money':
+                showSection(mobileSection);
+                break;
+            case 'bank_transfer':
+                showSection(bankSection);
+                break;
+            case 'card':
+                showSection(cardSection);
+                break;
+        }
+    } else {
+        // Par défaut, afficher mobile money
+        showSection(mobileSection);
+    }
+
+    // Écouter les changements
+    methodOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            switch(this.value) {
+                case 'mobile_money':
+                    showSection(mobileSection);
+                    break;
+                case 'bank_transfer':
+                    showSection(bankSection);
+                    break;
+                case 'card':
+                    showSection(cardSection);
+                    break;
+            }
+        });
+    });
+});
+
+function confirmReset() {
+    if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes vos informations de paiement ? Cette action ne peut pas être annulée.')) {
+        // Créer un formulaire temporaire pour la réinitialisation
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "reset_payment_info" %}';
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
+{% endblock %} 

@@ -1,0 +1,523 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Paramètres de {{ group.name }} - BLIZZ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--dark-blue);
+        min-height: 100vh;
+    }
+
+    .settings-header {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 0 15px var(--primary-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .settings-header h1 {
+        color: var(--text-color);
+        font-weight: 700;
+        margin: 0 0 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-shadow: 0 0 15px var(--primary-color);
+    }
+
+    .btn-back {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: var(--text-color);
+        border: 1px solid var(--primary-color);
+        padding: 10px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px var(--primary-color);
+        color: var(--text-color);
+        text-decoration: none;
+    }
+
+    .settings-card {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 0 15px var(--primary-color);
+        backdrop-filter: blur(10px);
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-color);
+        font-size: 16px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 15px;
+        border: 1px solid var(--primary-color);
+        border-radius: 12px;
+        font-size: 16px;
+        background: var(--dark-blue);
+        color: var(--text-color);
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+        font-family: inherit;
+    }
+
+    .avatar-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+        border: 2px dashed #e0e0e0;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .avatar-section:hover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    .current-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #667eea;
+    }
+
+    .current-avatar.default {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 32px;
+    }
+
+    .avatar-info {
+        flex: 1;
+    }
+
+    .avatar-info h4 {
+        margin: 0 0 5px 0;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .avatar-info p {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .character-count {
+        font-size: 12px;
+        color: #999;
+        text-align: right;
+        margin-top: 5px;
+    }
+
+    .character-count.warning {
+        color: #f39c12;
+    }
+
+    .character-count.error {
+        color: #e74c3c;
+    }
+
+    .form-help {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .btn-save {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .danger-zone {
+        background: rgba(231, 76, 60, 0.1);
+        border: 2px solid rgba(231, 76, 60, 0.3);
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 30px;
+    }
+
+    .danger-zone h3 {
+        color: #e74c3c;
+        margin: 0 0 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .danger-zone p {
+        color: #666;
+        margin-bottom: 15px;
+    }
+
+    .btn-danger {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-danger:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-leave {
+        background: rgba(243, 156, 18, 0.2);
+        color: #f39c12;
+        border: 2px solid rgba(243, 156, 18, 0.3);
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 10px;
+    }
+
+    .btn-leave:hover {
+        background: #f39c12;
+        color: white;
+    }
+
+    .danger-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .settings-container {
+            padding: 10px;
+        }
+        
+        .settings-card {
+            padding: 20px;
+        }
+        
+        .avatar-section {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .danger-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <a href="{% url 'group_chat' group.id %}" class="btn-back">
+        <i class="fas fa-arrow-left"></i>
+        Retour au chat
+    </a>
+
+    <div class="settings-header">
+        <h1>
+            <i class="fas fa-cog"></i>
+            Paramètres du groupe
+        </h1>
+    </div>
+
+    <div class="settings-card">
+        <form method="POST" enctype="multipart/form-data" id="settingsForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="name">Nom du groupe *</label>
+                <input type="text" 
+                       id="name" 
+                       name="name" 
+                       class="form-control" 
+                       value="{{ group.name }}"
+                       required
+                       maxlength="50">
+                <div class="character-count" id="nameCount">{{ group.name|length }}/50</div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" 
+                          name="description" 
+                          class="form-control" 
+                          placeholder="Décrivez votre groupe, ses objectifs, règles..."
+                          maxlength="500">{{ group.description }}</textarea>
+                <div class="character-count" id="descCount">{{ group.description|length|default:0 }}/500</div>
+                <div class="form-help">Description visible par tous les membres</div>
+            </div>
+
+            <div class="form-group">
+                <label>Avatar du groupe</label>
+                <div class="avatar-section" onclick="document.getElementById('avatar').click()">
+                    {% if group.avatar %}
+                        <img src="{{ group.avatar.url }}" alt="{{ group.name }}" class="current-avatar" id="avatarPreview">
+                    {% else %}
+                        <div class="current-avatar default" id="avatarPreview">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="avatar-info">
+                        <h4>Changer l'avatar</h4>
+                        <p>Cliquez pour sélectionner une nouvelle image (optionnel)</p>
+                    </div>
+                </div>
+                <input type="file" 
+                       id="avatar" 
+                       name="avatar" 
+                       class="file-input" 
+                       accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label for="max_members">Nombre maximum de membres</label>
+                <input type="number" 
+                       id="max_members" 
+                       name="max_members" 
+                       class="form-control" 
+                       value="{{ group.max_members }}" 
+                       min="2" 
+                       max="200">
+                <div class="form-help">Entre 2 et 200 membres (actuellement {{ group.get_members_count }} membres)</div>
+            </div>
+
+            <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i>
+                Enregistrer les modifications
+            </button>
+        </form>
+    </div>
+
+    <div class="settings-card">
+        <div class="danger-zone">
+            <h3>
+                <i class="fas fa-exclamation-triangle"></i>
+                Zone de danger
+            </h3>
+            <p>Ces actions sont irréversibles. Procédez avec prudence.</p>
+            
+            <div class="danger-actions">
+                <form method="POST" action="{% url 'leave_group' group.id %}" style="display: inline;"
+                      onsubmit="return confirm('Êtes-vous sûr de vouloir quitter ce groupe ? Cette action est irréversible.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-leave">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Quitter le groupe
+                    </button>
+                </form>
+                
+                {% if group.created_by == request.user %}
+                    <button onclick="confirmDeleteGroup()" class="btn-danger">
+                        <i class="fas fa-trash"></i>
+                        Supprimer le groupe
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const nameInput = document.getElementById('name');
+    const descInput = document.getElementById('description');
+    const avatarInput = document.getElementById('avatar');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const nameCount = document.getElementById('nameCount');
+    const descCount = document.getElementById('descCount');
+    const form = document.getElementById('settingsForm');
+    
+    // Compteur de caractères pour le nom
+    nameInput.addEventListener('input', function() {
+        const count = this.value.length;
+        nameCount.textContent = `${count}/50`;
+        
+        if (count > 40) {
+            nameCount.className = 'character-count warning';
+        } else if (count > 45) {
+            nameCount.className = 'character-count error';
+        } else {
+            nameCount.className = 'character-count';
+        }
+    });
+    
+    // Compteur de caractères pour la description
+    descInput.addEventListener('input', function() {
+        const count = this.value.length;
+        descCount.textContent = `${count}/500`;
+        
+        if (count > 400) {
+            descCount.className = 'character-count warning';
+        } else if (count > 450) {
+            descCount.className = 'character-count error';
+        } else {
+            descCount.className = 'character-count';
+        }
+    });
+    
+    // Prévisualisation de l'avatar
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Vérifier la taille du fichier (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('L\'image est trop volumineuse. Taille maximum: 5MB');
+                this.value = '';
+                return;
+            }
+            
+            // Vérifier le type de fichier
+            if (!file.type.startsWith('image/')) {
+                alert('Veuillez sélectionner une image valide');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                avatarPreview.className = 'current-avatar';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Validation du formulaire
+    form.addEventListener('submit', function(e) {
+        const name = nameInput.value.trim();
+        
+        if (name.length < 2) {
+            e.preventDefault();
+            alert('Le nom du groupe doit contenir au moins 2 caractères');
+            nameInput.focus();
+            return;
+        }
+        
+        if (name.length > 50) {
+            e.preventDefault();
+            alert('Le nom du groupe ne peut pas dépasser 50 caractères');
+            nameInput.focus();
+            return;
+        }
+        
+        const maxMembers = parseInt(document.getElementById('max_members').value);
+        const currentMembers = parseInt('{{ group.get_members_count }}');
+        
+        if (maxMembers < currentMembers) {
+            e.preventDefault();
+            alert('Le nombre maximum de membres ne peut pas être inférieur au nombre actuel de membres (' + currentMembers + ')');
+            return;
+        }
+        
+        // Désactiver le bouton pour éviter les doubles soumissions
+        const submitBtn = document.querySelector('.btn-save');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+    });
+    
+    function confirmDeleteGroup() {
+        if (confirm('⚠️ ATTENTION ⚠️\n\nÊtes-vous absolument sûr de vouloir SUPPRIMER ce groupe ?\n\n• Tous les messages seront perdus\n• Tous les membres seront retirés\n• Cette action est IRRÉVERSIBLE\n\nTapez "SUPPRIMER" pour confirmer')) {
+            const confirmation = prompt('Pour confirmer la suppression, tapez exactement "SUPPRIMER" :');
+            if (confirmation === 'SUPPRIMER') {
+                // Créer un formulaire pour supprimer le groupe
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/chat/group/{{ group.id }}/delete/';
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrfmiddlewaretoken';
+                csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                form.appendChild(csrfToken);
+                document.body.appendChild(form);
+                form.submit();
+            } else {
+                alert('Suppression annulée - le texte de confirmation ne correspond pas.');
+            }
+        }
+    }
+</script>
+{% endblock %}

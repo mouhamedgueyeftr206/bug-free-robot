@@ -1,0 +1,669 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="main-container">
+    <div class="transaction-detail-container">
+        <!-- Détails de la transaction -->
+        <div class="transaction-info-panel">
+            <h1 class="transaction-title">Transaction: {{ transaction.post.title }}</h1>
+            
+            <div class="transaction-status-bar">
+                <div class="status-indicator status-{{ transaction.status }}">
+                    {{ transaction.get_status_display }}
+                </div>
+                
+                {% if in_security_period %}
+                <div class="security-period">
+                    <i class="fas fa-shield-alt"></i>
+                    Période de sécurité: {{ security_period_end|timeuntil }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="transaction-details glass-effect">
+                <div class="detail-item">
+                    <span class="detail-label">Compte:</span>
+                    <span class="detail-value">{{ transaction.post.title }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Prix:</span>
+                    <span class="detail-value">{{ transaction.amount }} €</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{{ transaction.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">
+                        {% if is_buyer %}Vendeur:{% else %}Acheteur:{% endif %}
+                    </span>
+                    <span class="detail-value">
+                        {% if is_buyer %}{{ transaction.seller.username }}{% else %}{{ transaction.buyer.username }}{% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            {% if is_buyer and transaction.status == 'pending' and in_security_period %}
+            <div class="transaction-actions">
+                {% if not transaction.cinetpay_transaction %}
+                <a href="{% url 'initiate_cinetpay_payment' transaction.id %}" class="btn-cinetpay">
+                    <i class="fas fa-credit-card"></i> Payer avec CinetPay
+                </a>
+                {% else %}
+                <div class="payment-status">
+                    <i class="fas fa-clock"></i> Paiement en cours...
+                </div>
+                {% endif %}
+                <a href="{% url 'complete_transaction' transaction.id %}" class="btn-success">
+                    <i class="fas fa-check-circle"></i> Confirmer réception
+                </a>
+                <a href="{% url 'dispute_transaction' transaction.id %}" class="btn-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Signaler un problème
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if is_buyer and transaction.status == 'processing' %}
+            <div class="transaction-actions">
+                <a href="{% url 'confirm_reception' transaction.id %}" class="btn-confirm">
+                    <i class="fas fa-check-circle"></i> Confirmer la Réception
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if not is_buyer and transaction.status == 'processing' %}
+            <div class="transaction-actions">
+                <a href="{% url 'seller_payment_setup' %}" class="btn-setup">
+                    <i class="fas fa-cog"></i> Configurer Paiement
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if transaction.status == 'disputed' %}
+            <div class="dispute-info glass-effect">
+                <h3><i class="fas fa-exclamation-triangle"></i> Transaction en litige</h3>
+                <p>Cette transaction est actuellement en cours d'examen par notre équipe. Nous vous contacterons prochainement.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Chat -->
+        {% if cinetpay_payment_validated %}
+        <div class="chat-panel glass-effect">
+            <div class="chat-header">
+                <h2>
+                    <i class="fas fa-comments"></i> 
+                    Discussion avec 
+                    {% if is_buyer %}{{ transaction.seller.username }}{% else %}{{ transaction.buyer.username }}{% endif %}
+                </h2>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                {% for message in messages %}
+                <div class="message {% if message.sender == request.user %}message-mine{% else %}message-other{% endif %}">
+                    <div class="message-content">
+                        {{ message.content }}
+                    </div>
+                    <div class="message-meta">
+                        <span class="message-sender">{{ message.sender.username }}</span>
+                        <span class="message-time">{{ message.created_at|time:"H:i" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="no-messages">
+                    <p>Aucun message pour le moment. Commencez la conversation!</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <form class="chat-form" action="{% url 'send_message' chat.id %}" method="post" id="message-form">
+                {% csrf_token %}
+                <input type="text" name="content" placeholder="Tapez votre message..." required class="chat-input">
+                <button type="submit" class="chat-send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="chat-panel glass-effect">
+            <div class="chat-header">
+                <h2>
+                    <i class="fas fa-lock"></i> 
+                    Chat verrouillé
+                </h2>
+            </div>
+            
+            <div class="chat-locked">
+                <div class="locked-message">
+                    <i class="fas fa-credit-card"></i>
+                    <h3>Paiement requis</h3>
+                    <p>Le chat sera activé une fois que le paiement sera validé par CinetPay.</p>
+                    {% if is_buyer and transaction.status == 'pending' %}
+                    <a href="{% url 'initiate_cinetpay_payment' transaction.id %}" class="btn-cinetpay">
+                        <i class="fas fa-credit-card"></i> Payer maintenant
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .transaction-detail-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    @media (min-width: 992px) {
+        .transaction-detail-container {
+            grid-template-columns: 1fr 1.5fr;
+        }
+    }
+    
+    .transaction-info-panel {
+        background: rgba(15, 23, 41, 0.95);
+        border-radius: 15px;
+        padding: 2rem;
+        border: 1px solid var(--primary-color);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .transaction-title {
+        color: var(--primary-color);
+        font-family: 'RussoOne', sans-serif;
+        font-size: 1.8rem;
+        margin: 0;
+        text-shadow: 0 0 10px var(--primary-color);
+    }
+    
+    .transaction-status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 1rem;
+        border-radius: 10px;
+    }
+    
+    .status-indicator {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+    
+    .status-pending {
+        background: #f39c12;
+        color: #000;
+    }
+    
+    .status-processing {
+        background: #3498db;
+        color: #fff;
+    }
+    
+    .status-completed {
+        background: #2ecc71;
+        color: #fff;
+    }
+    
+    .status-cancelled {
+        background: #e74c3c;
+        color: #fff;
+    }
+    
+    .status-disputed {
+        background: #9b59b6;
+        color: #fff;
+    }
+    
+    .status-refunded {
+        background: #1abc9c;
+        color: #fff;
+    }
+    
+    .security-period {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #f39c12;
+        font-size: 0.9rem;
+    }
+    
+    .transaction-details {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .detail-value {
+        color: white;
+    }
+    
+    .transaction-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-success, .btn-danger, .btn-cinetpay, .btn-payout, .btn-setup, .btn-confirm {
+        flex: 1;
+        padding: 0.8rem;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-success {
+        background: #2ecc71;
+        color: white;
+    }
+    
+    .btn-danger {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-cinetpay {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-success:hover, .btn-danger:hover, .btn-cinetpay:hover, .btn-payout:hover, .btn-setup:hover, .btn-confirm:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-cinetpay:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-payout {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-payout:hover {
+        background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+        box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+    }
+    
+    .btn-confirm {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        color: #000000;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-confirm:hover {
+        background: linear-gradient(135deg, #00cc6a 0%, #00ff88 100%);
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+    }
+    
+    .btn-setup {
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        color: white;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-setup:hover {
+        background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+    }
+    
+    .payment-status {
+        flex: 1;
+        padding: 0.8rem;
+        border-radius: 8px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid #ffc107;
+    }
+    
+    .dispute-info {
+        padding: 1.5rem;
+        border-radius: 10px;
+        background: rgba(231, 76, 60, 0.1);
+        border: 1px solid #e74c3c;
+    }
+    
+    .dispute-info h3 {
+        color: #e74c3c;
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Chat styles */
+    .chat-panel {
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .chat-header {
+        background: var(--primary-color);
+        padding: 1rem;
+        color: white;
+    }
+    
+    .chat-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .message {
+        max-width: 80%;
+        padding: 1rem;
+        border-radius: 15px;
+        position: relative;
+    }
+    
+    .message-mine {
+        align-self: flex-end;
+        background: var(--primary-color);
+        color: white;
+        border-bottom-right-radius: 0;
+    }
+    
+    .message-other {
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.1);
+        border-bottom-left-radius: 0;
+    }
+    
+    .message-content {
+        margin-bottom: 0.5rem;
+    }
+    
+    .message-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+    
+    .no-messages {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        color: rgba(255, 255, 255, 0.5);
+        text-align: center;
+    }
+    
+    .chat-form {
+        display: flex;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        gap: 0.5rem;
+    }
+    
+    .chat-input {
+        flex: 1;
+        padding: 0.8rem 1rem;
+        border-radius: 25px;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    .chat-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--primary-color);
+    }
+    
+    .chat-send-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: none;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .chat-send-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 15px var(--primary-color);
+    }
+    
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    .chat-panel {
+        background: rgba(15, 23, 41, 0.95);
+        border-radius: 15px;
+        border: 1px solid var(--primary-color);
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+    }
+    
+    .chat-locked {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        padding: 2rem;
+    }
+    
+    .locked-message {
+        text-align: center;
+        color: #ccc;
+    }
+    
+    .locked-message i {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .locked-message h3 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+    
+    .locked-message p {
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageForm = document.getElementById('message-form');
+        
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Initial scroll to bottom
+        scrollToBottom();
+        
+        // Handle form submission with AJAX
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Create new message element
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message message-mine';
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'message-content';
+                    contentDiv.textContent = data.message.content;
+                    
+                    const metaDiv = document.createElement('div');
+                    metaDiv.className = 'message-meta';
+                    
+                    const senderSpan = document.createElement('span');
+                    senderSpan.className = 'message-sender';
+                    senderSpan.textContent = data.message.sender;
+                    
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'message-time';
+                    timeSpan.textContent = data.message.created_at;
+                    
+                    metaDiv.appendChild(senderSpan);
+                    metaDiv.appendChild(timeSpan);
+                    
+                    messageDiv.appendChild(contentDiv);
+                    messageDiv.appendChild(metaDiv);
+                    
+                    chatMessages.appendChild(messageDiv);
+                    
+                    // Clear input
+                    messageForm.reset();
+                    
+                    // Scroll to bottom
+                    scrollToBottom();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+        
+        // Poll for new messages every 5 seconds
+        function pollMessages() {
+            fetch('{% url "get_messages" chat.id %}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Clear existing messages
+                chatMessages.innerHTML = '';
+                
+                // Add all messages
+                if (data.messages.length === 0) {
+                    const noMessagesDiv = document.createElement('div');
+                    noMessagesDiv.className = 'no-messages';
+                    noMessagesDiv.innerHTML = '<p>Aucun message pour le moment. Commencez la conversation!</p>';
+                    chatMessages.appendChild(noMessagesDiv);
+                } else {
+                    data.messages.forEach(message => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = message.is_mine ? 'message message-mine' : 'message message-other';
+                        
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'message-content';
+                        contentDiv.textContent = message.content;
+                        
+                        const metaDiv = document.createElement('div');
+                        metaDiv.className = 'message-meta';
+                        
+                        const senderSpan = document.createElement('span');
+                        senderSpan.className = 'message-sender';
+                        senderSpan.textContent = message.sender;
+                        
+                        const timeSpan = document.createElement('span');
+                        timeSpan.className = 'message-time';
+                        timeSpan.textContent = message.created_at;
+                        
+                        metaDiv.appendChild(senderSpan);
+                        metaDiv.appendChild(timeSpan);
+                        
+                        messageDiv.appendChild(contentDiv);
+                        messageDiv.appendChild(metaDiv);
+                        
+                        chatMessages.appendChild(messageDiv);
+                    });
+                }
+                
+                // Scroll to bottom
+                scrollToBottom();
+            })
+            .catch(error => {
+                console.error('Error polling messages:', error);
+            });
+        }
+        
+        // Poll initially and then every 5 seconds
+        pollMessages();
+        setInterval(pollMessages, 5000);
+    });
+</script>
+{% endblock %}

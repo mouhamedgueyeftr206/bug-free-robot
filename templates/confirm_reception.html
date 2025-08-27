@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmer la Réception - BLIZZ{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="confirm-reception-container">
+        <div class="confirm-reception-card glass-effect">
+            <div class="confirm-header">
+                <i class="fas fa-check-circle"></i>
+                <h2>Confirmer la Réception</h2>
+            </div>
+            
+            <div class="transaction-details">
+                <h3>Détails de la Transaction</h3>
+                <div class="detail-row">
+                    <span class="label">Produit :</span>
+                    <span class="value">{{ transaction.post.title }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Prix :</span>
+                    <span class="value">{{ transaction.amount }} €</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Vendeur :</span>
+                    <span class="value">{{ transaction.seller.username }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Statut :</span>
+                    <span class="value status-processing">En cours</span>
+                </div>
+            </div>
+            
+            <div class="warning-section">
+                <div class="warning-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="warning-content">
+                    <h4>⚠️ Important</h4>
+                    <p>En confirmant la réception, vous déclarez que :</p>
+                    <ul>
+                        <li>Vous avez bien reçu le produit</li>
+                        <li>Le produit correspond à la description</li>
+                        <li>Vous êtes satisfait de votre achat</li>
+                    </ul>
+                    <p><strong>Cette action est irréversible et déclenchera automatiquement le paiement au vendeur.</strong></p>
+                </div>
+            </div>
+            
+            <div class="confirm-actions">
+                <form method="post" class="confirm-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-confirm">
+                        <i class="fas fa-check"></i>
+                        Confirmer la Réception
+                    </button>
+                </form>
+                
+                <a href="{% url 'transaction_detail' transaction.id %}" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Annuler
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.confirm-reception-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.confirm-reception-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.confirm-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.confirm-header i {
+    font-size: 3rem;
+    color: #00ff88;
+    margin-bottom: 1rem;
+}
+
+.confirm-header h2 {
+    color: #ffffff;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.transaction-details {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.transaction-details h3 {
+    color: #00ff88;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.label {
+    color: #b0b0b0;
+    font-weight: bold;
+}
+
+.value {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.status-processing {
+    color: #ffaa00;
+}
+
+.warning-section {
+    background: rgba(255, 193, 7, 0.1);
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.warning-icon {
+    color: #ffc107;
+    font-size: 1.5rem;
+    margin-top: 0.2rem;
+}
+
+.warning-content h4 {
+    color: #ffc107;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.warning-content p {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.warning-content ul {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.warning-content li {
+    margin-bottom: 0.5rem;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+    color: #000000;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+}
+
+.btn-confirm:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+}
+
+.btn-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    transform: translateY(-3px);
+}
+
+@media (max-width: 768px) {
+    .confirm-actions {
+        flex-direction: column;
+    }
+    
+    .btn-confirm,
+    .btn-cancel {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %} 

@@ -1,0 +1,967 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Highlight de {{ highlight.author.username }} - BLIZZ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/appreciation.css' %}">
+{% endblock %}
+
+{% block content %}
+<style>
+    .detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1rem;
+        background: var(--dark-blue);
+        min-height: 100vh;
+    }
+
+    .highlight-detail-card {
+        background: linear-gradient(145deg, rgba(15, 23, 41, 0.9), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .highlight-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .author-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid var(--primary-color);
+        object-fit: cover;
+    }
+
+    .author-info {
+        flex: 1;
+    }
+
+    .author-name {
+        color: white;
+        font-weight: 600;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .highlight-meta {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+
+    .highlight-actions-header {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn-header {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.8rem;
+    }
+
+    .action-btn-header:hover {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .highlight-video-section {
+        position: relative;
+        background: #000;
+        overflow: hidden;
+        border-radius: 0;
+    }
+
+    .highlight-video-container {
+        position: relative;
+        width: 100%;
+        background: #000;
+        overflow: hidden;
+    }
+
+    .highlight-video {
+        width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
+        display: block;
+        background: #000;
+    }
+
+    /* Remove conflicting video controls */
+    video::-webkit-media-controls {
+        display: none !important;
+    }
+    
+    video::-webkit-media-controls-panel {
+        display: none !important;
+    }
+    
+    video::-webkit-media-controls-play-button {
+        display: none !important;
+    }
+    
+    video::-webkit-media-controls-volume-slider {
+        display: none !important;
+    }
+    
+    video::-webkit-media-controls-timeline {
+        display: none !important;
+    }
+    
+    video::-webkit-media-controls-current-time-display,
+    video::-webkit-media-controls-time-remaining-display {
+        display: none !important;
+    }
+    
+    /* Custom video controls overlay - fixed positioning */
+    .video-controls-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(15,23,41,0.9));
+        padding: 20px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    .highlight-video-container:hover .video-controls-overlay {
+        opacity: 1;
+    }
+    
+    .video-controls-overlay .controls-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        pointer-events: auto;
+    }
+    
+    .video-controls-overlay .controls-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .control-btn {
+        background: rgba(15,23,41,0.9);
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .control-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    
+    .control-btn i { 
+        font-size: 1.1rem; 
+    }
+    
+    /* Time display styling */
+    .time-display {
+        color: var(--primary-color);
+        font-weight: bold;
+        font-size: 0.9rem;
+        background: rgba(15,23,41,0.9);
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 2px solid var(--primary-color);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    /* Volume slider styling */
+    .volume-slider {
+        width: 80px;
+        height: 6px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 3px;
+        outline: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+    }
+    
+    .volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .volume-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    /* Navigation arrows */
+    .nav-arrows { 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        right: 0; 
+        bottom: 0; 
+        pointer-events: none; 
+        z-index: 100; 
+    }
+    .nav-arrow { 
+        position: absolute; 
+        top: 50%; 
+        transform: translateY(-50%); 
+        background: rgba(15,23,41,0.9); 
+        border: 2px solid var(--primary-color); 
+        color: var(--primary-color); 
+        width: 50px; 
+        height: 50px; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        text-decoration: none; 
+        transition: all 0.3s ease; 
+        pointer-events: auto;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        backdrop-filter: blur(10px);
+    }
+    .nav-arrow.left { left: 20px; }
+    .nav-arrow.right { right: 20px; }
+    .nav-arrow:hover { 
+        background: var(--primary-color); 
+        color: white; 
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    .nav-arrow i { font-size: 1.2rem; }
+    
+    /* Content sections */
+    .highlight-content {
+        padding: 1.5rem;
+    }
+
+    .highlight-caption {
+        color: white;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+        font-size: 1rem;
+    }
+
+    .hashtags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .hashtag {
+        background: rgba(108, 92, 231, 0.2);
+        color: var(--primary-color);
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .hashtag:hover {
+        background: var(--primary-color);
+        color: white;
+        text-decoration: none;
+    }
+
+    .highlight-stats {
+        display: flex;
+        justify-content: space-around;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        color: white;
+    }
+
+    .stat-number {
+        font-family: 'RussoOne', sans-serif;
+        font-size: 1.2rem;
+        color: var(--secondary-color);
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+
+    .highlight-actions {
+        display: flex;
+        justify-content: space-around;
+        padding: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 0.75rem;
+        border-radius: 10px;
+        min-width: 60px;
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.1);
+    }
+
+    .action-btn.liked {
+        color: #ff6b6b;
+    }
+
+    .action-btn i {
+        font-size: 1.5rem;
+    }
+
+    .action-btn span {
+        font-size: 0.8rem;
+    }
+
+    .comments-section {
+        background: linear-gradient(145deg, rgba(15, 23, 41, 0.9), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .comments-header {
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .comments-title {
+        color: white;
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .comments-list {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .comment-item {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .comment-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .comment-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        border: 1px solid var(--primary-color);
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .comment-content {
+        flex: 1;
+    }
+
+    .comment-author {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .comment-text {
+        color: white;
+        margin-bottom: 0.25rem;
+        line-height: 1.4;
+    }
+
+    .comment-time {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+    }
+
+    .comment-form {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .comment-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 0.75rem 1rem;
+        color: white;
+        resize: none;
+        font-family: inherit;
+    }
+
+    .comment-input:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 10px rgba(162, 155, 254, 0.3);
+    }
+
+    .comment-submit {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .comment-submit:hover {
+        background: var(--secondary-color);
+        transform: scale(1.1);
+    }
+
+    .back-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 20px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .detail-container {
+            padding: 0.5rem;
+        }
+        
+        .highlight-header {
+            padding: 1rem;
+        }
+        
+        .highlight-content {
+            padding: 1rem;
+        }
+        
+        .highlight-actions {
+            padding: 0.75rem;
+        }
+        
+        .action-btn {
+            padding: 0.5rem;
+            min-width: 50px;
+        }
+        
+        .action-btn i {
+            font-size: 1.2rem;
+        }
+    }
+    
+    /* Modal styles */
+    .modal { 
+        position: fixed; 
+        inset: 0; 
+        z-index: 2000; 
+    }
+    .modal-backdrop { 
+        position: absolute; 
+        inset: 0; 
+        background: rgba(0,0,0,0.6); 
+    }
+    .modal-content { 
+        position: relative; 
+        max-width: 480px; 
+        margin: 10vh auto; 
+        background: rgba(15,23,41,0.95); 
+        border: 1px solid var(--primary-color); 
+        border-radius: 16px; 
+        padding: 1rem; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+    }
+    .modal-header { 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        color: var(--primary-color); 
+    }
+    .modal-body { 
+        color: var(--text-color); 
+        padding: 1rem 0; 
+    }
+    .modal-actions { 
+        display: flex; 
+        gap: .75rem; 
+        justify-content: flex-end; 
+    }
+    .modal-close { 
+        background: transparent; 
+        border: 1px solid var(--primary-color); 
+        color: var(--text-color); 
+        border-radius: 50%; 
+        width: 34px; 
+        height: 34px; 
+        cursor: pointer; 
+    }
+    .btn-danger { 
+        background: #e74c3c; 
+        color: white; 
+        border: none; 
+        padding: .75rem 1rem; 
+        border-radius: 10px; 
+        cursor: pointer; 
+    }
+    .btn-danger:hover { 
+        background: #c0392b; 
+    }
+    .btn-secondary { 
+        background: transparent; 
+        color: var(--text-color); 
+        border: 1px solid var(--text-color); 
+        padding: .75rem 1rem; 
+        border-radius: 10px; 
+        cursor: pointer; 
+    }
+    .btn-secondary:hover { 
+        background: var(--text-color); 
+        color: var(--dark-blue); 
+    }
+</style>
+
+<div class="detail-container">
+    <div class="highlight-detail-card">
+        <!-- Header avec informations de l'auteur -->
+        <div class="highlight-header">
+            <img src="{{ highlight.author.profile.profileimg.url|default:'/static/images/default-avatar.png' }}" 
+                 alt="{{ highlight.author.username }}" 
+                 class="author-avatar">
+            <div class="author-info">
+                <h3 class="author-name">{{ highlight.author.username }}</h3>
+                <div class="highlight-meta">
+                    {{ highlight.created_at|timesince }}
+                </div>
+            </div>
+            <div class="highlight-actions-header">
+                {% if user == highlight.author %}
+                <button type="button" class="action-btn-header" onclick="openDeleteModal()">
+                    <i class="fas fa-trash"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Section vidéo -->
+        <div class="highlight-video-section">
+            <div class="highlight-video-container">
+                <video 
+                    id="highlightVideo" 
+                    class="highlight-video" 
+                    controls 
+                    preload="metadata"
+                    poster="{{ highlight.thumbnail.url|default:highlight.video.url }}"
+                >
+                    <source src="{{ highlight.video.url }}" type="video/mp4">
+                    Votre navigateur ne supporte pas la lecture de vidéos.
+                </video>
+                
+                <!-- Custom video controls overlay -->
+                <div class="video-controls-overlay">
+                    <div class="controls-row">
+                        <button class="control-btn" onclick="togglePlayPause()" id="playPauseBtn">
+                            <i class="fas fa-play" id="playPauseIcon"></i>
+                        </button>
+                        <div class="time-display">
+                            <span id="currentTime">0:00</span> / <span id="totalTime">0:00</span>
+                        </div>
+                    </div>
+                    <div class="controls-row">
+                        <button class="control-btn" onclick="toggleMute()" id="muteBtn">
+                            <i class="fas fa-volume-up" id="muteIcon"></i>
+                        </button>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="100" class="volume-slider">
+                        <button class="control-btn" onclick="toggleFullscreen()">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation arrows -->
+        {% if previous_highlight or next_highlight %}
+        <div class="nav-arrows">
+            {% if previous_highlight %}
+            <a class="nav-arrow left" href="{% url 'highlight_detail' highlight_id=previous_highlight.id %}" 
+               data-highlight-id="{{ previous_highlight.id }}" onclick="navigateHighlight(event, '{{ previous_highlight.id }}')" title="Précédent">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            {% if next_highlight %}
+            <a class="nav-arrow right" href="{% url 'highlight_detail' highlight_id=next_highlight.id %}" 
+               data-highlight-id="{{ next_highlight.id }}" onclick="navigateHighlight(event, '{{ next_highlight.id }}')" title="Suivant">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Contenu du highlight -->
+        <div class="highlight-content">
+            <p class="highlight-caption">{{ highlight.caption }}</p>
+            
+            {% if highlight.hashtags %}
+            <div class="hashtags">
+                {% for hashtag in highlight.hashtags %}
+                <a href="{% url 'highlights_hashtag' hashtag=hashtag %}" class="hashtag">#{{ hashtag }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Système d'appréciation -->
+        {% if user.is_authenticated %}
+        <div class="appreciation-container" data-highlight-id="{{ highlight.id }}">
+            <h3 class="appreciation-title">🎯 Appréciez cette vidéo</h3>
+            
+            <div class="appreciation-buttons">
+                <button class="appreciation-button {% if user_appreciation.appreciation_level == 1 %}selected{% endif %}" data-level="1" data-highlight-id="{{ highlight.id }}">
+                    <img src="/media/React_img/emotion_niveau_1.png" alt="Extrêmement nul" class="appreciation-emoji">
+                    <div class="appreciation-tooltip">Extrêmement nul</div>
+                </button>
+                <button class="appreciation-button {% if user_appreciation.appreciation_level == 2 %}selected{% endif %}" data-level="2" data-highlight-id="{{ highlight.id }}">
+                    <img src="/media/React_img/emotion_niveau_2.png" alt="Pas terrible" class="appreciation-emoji">
+                    <div class="appreciation-tooltip">Pas terrible</div>
+                </button>
+                <button class="appreciation-button {% if user_appreciation.appreciation_level == 3 %}selected{% endif %}" data-level="3" data-highlight-id="{{ highlight.id }}">
+                    <img src="/media/React_img/emotion_niveau_3.png" alt="Moyen" class="appreciation-emoji">
+                    <div class="appreciation-tooltip">Moyen</div>
+                </button>
+                <button class="appreciation-button {% if user_appreciation.appreciation_level == 4 %}selected{% endif %}" data-level="4" data-highlight-id="{{ highlight.id }}">
+                    <img src="/media/React_img/emotion_niveau_4.png" alt="Bien" class="appreciation-emoji">
+                    <div class="appreciation-tooltip">Bien</div>
+                </button>
+                <button class="appreciation-button {% if user_appreciation.appreciation_level == 5 %}selected{% endif %}" data-level="5" data-highlight-id="{{ highlight.id }}">
+                    <img src="/media/React_img/emotion_niveau_5.png" alt="Très bien" class="appreciation-emoji">
+                    <div class="appreciation-tooltip">Très bien</div>
+                </button>
+                <button class="appreciation-button {% if user_appreciation.appreciation_level == 6 %}selected{% endif %}" data-level="6" data-highlight-id="{{ highlight.id }}">
+                    <img src="/media/React_img/emotion_niveau_6.png" alt="Extraordinaire" class="appreciation-emoji">
+                    <div class="appreciation-tooltip">Extraordinaire</div>
+                </button>
+            </div>
+            
+            <!-- Statistiques d'appréciation -->
+            <div class="appreciation-stats">
+
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Statistiques -->
+        <div class="highlight-stats">
+            <div class="stat-item">
+                <span class="stat-number">{{ highlight.views.count }}</span>
+                <span class="stat-label">Vues</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ highlight.appreciations.count }}</span>
+                <span class="stat-label">Appréciations</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ highlight.comments.count }}</span>
+                <span class="stat-label">Commentaires</span>
+            </div>
+        </div>
+
+        <!-- Actions (commenter, partager) -->
+        <div class="highlight-actions">
+            <button class="action-btn comment-btn" onclick="toggleComments()">
+                <i class="fas fa-comment"></i>
+                <span>Commenter</span>
+            </button>
+            
+            <button class="action-btn share-btn" onclick="shareHighlight()">
+                <i class="fas fa-share"></i>
+                <span>Partager</span>
+            </button>
+        </div>
+
+        <!-- Section commentaires -->
+        <div class="comments-section" id="commentsSection" style="display:none;">
+            <div class="comments-header">
+                <h3 class="comments-title">
+                    <i class="fas fa-comments"></i>
+                    Commentaires ({{ comments.count }})
+                </h3>
+            </div>
+            
+            <div class="comments-list">
+                {% for comment in comments %}
+                <div class="comment-item">
+                    <img src="{{ comment.user.profile.profileimg.url|default:'/static/images/default-avatar.png' }}" 
+                         alt="{{ comment.user.username }}" 
+                         class="comment-avatar">
+                    <div class="comment-content">
+                        <div class="comment-author">{{ comment.user.username }}</div>
+                        <div class="comment-text">{{ comment.text }}</div>
+                        <div class="comment-time">{{ comment.created_at|timesince }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: rgba(255,255,255,0.6); text-align: center; padding: 2rem;">Aucun commentaire pour le moment</p>
+                {% endfor %}
+            </div>
+            
+            {% if user.is_authenticated %}
+            <form class="comment-form" method="POST" action="{% url 'add_highlight_comment' highlight_id=highlight.id %}">
+                {% csrf_token %}
+                <textarea name="text" class="comment-input" placeholder="Ajouter un commentaire..." rows="2" required></textarea>
+                <button type="submit" class="comment-submit">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de suppression -->
+<div id="deleteModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-trash"></i> Supprimer le highlight</h3>
+            <button class="modal-close" onclick="closeDeleteModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p>Cette action est définitive. Voulez-vous vraiment supprimer ce highlight ?</p>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeDeleteModal()"><i class="fas fa-times"></i> Annuler</button>
+            <form method="POST" action="{% url 'delete_highlight' highlight.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger"><i class="fas fa-trash"></i> Supprimer</button>
+            </form>
+        </div>
+    </div>
+    <div class="modal-backdrop" onclick="closeDeleteModal()"></div>
+</div>
+
+<script src="{% static 'js/appreciation.js' %}"></script>
+<script>
+function toggleComments(){
+    const sec = document.getElementById('commentsSection');
+    if(!sec) return;
+    sec.style.display = (sec.style.display === 'none' || sec.style.display === '') ? 'block' : 'none';
+}
+function openDeleteModal(){
+    document.getElementById('deleteModal').style.display='block';
+}
+function closeDeleteModal(){
+    document.getElementById('deleteModal').style.display='none';
+}
+
+// Smooth scrolling for navigation arrows
+function navigateHighlight(event, highlightId) {
+    event.preventDefault();
+    
+    // Add fade out effect
+    const currentContent = document.querySelector('.highlight-detail-card');
+    if (currentContent) {
+        currentContent.style.opacity = '0';
+        currentContent.style.transform = 'translateX(-20px)';
+        currentContent.style.transition = 'all 0.3s ease';
+    }
+    
+    // Navigate after animation
+    setTimeout(() => {
+        window.location.href = `/highlights/${highlightId}/`;
+    }, 300);
+}
+
+// Custom video controls
+function togglePlayPause() {
+    const video = document.getElementById('highlightVideo');
+    const btn = document.getElementById('playPauseBtn');
+    const icon = document.getElementById('playPauseIcon');
+    
+    if (video.paused) {
+        video.play();
+        icon.className = 'fas fa-pause';
+    } else {
+        video.pause();
+        icon.className = 'fas fa-play';
+    }
+}
+
+function toggleMute() {
+    const video = document.getElementById('highlightVideo');
+    const btn = document.getElementById('muteBtn');
+    const icon = document.getElementById('muteIcon');
+    const volumeSlider = document.getElementById('volumeSlider');
+    
+    if (video.muted) {
+        video.muted = false;
+        icon.className = 'fas fa-volume-up';
+        volumeSlider.value = video.volume * 100;
+    } else {
+        video.muted = true;
+        icon.className = 'fas fa-volume-mute';
+        volumeSlider.value = 0;
+    }
+}
+
+function toggleFullscreen() {
+    const video = document.getElementById('highlightVideo');
+    if (video.requestFullscreen) {
+        video.requestFullscreen();
+    } else if (video.webkitRequestFullscreen) {
+        video.webkitRequestFullscreen();
+    } else if (video.msRequestFullscreen) {
+        video.msRequestFullscreen();
+    }
+}
+
+// Update time display
+function updateTimeDisplay() {
+    const video = document.getElementById('highlightVideo');
+    const currentTimeSpan = document.getElementById('currentTime');
+    const totalTimeSpan = document.getElementById('totalTime');
+    
+    if (video.duration) {
+        totalTimeSpan.textContent = formatTime(video.duration);
+    }
+    
+    currentTimeSpan.textContent = formatTime(video.currentTime);
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+// Volume control
+function updateVolume() {
+    const video = document.getElementById('highlightVideo');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const muteIcon = document.getElementById('muteIcon');
+    
+    video.volume = volumeSlider.value / 100;
+    
+    if (video.volume === 0) {
+        muteIcon.className = 'fas fa-volume-mute';
+    } else if (video.volume < 0.5) {
+        muteIcon.className = 'fas fa-volume-down';
+    } else {
+        muteIcon.className = 'fas fa-volume-up';
+    }
+}
+
+// Initialize video controls
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('highlightVideo');
+    const volumeSlider = document.getElementById('volumeSlider');
+    
+    if (video) {
+        video.addEventListener('timeupdate', updateTimeDisplay);
+        video.addEventListener('loadedmetadata', updateTimeDisplay);
+        video.addEventListener('ended', () => {
+            document.getElementById('playPauseIcon').className = 'fas fa-play';
+        });
+    }
+    
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', updateVolume);
+    }
+    
+    // Add fade in effect for new content
+    const content = document.querySelector('.highlight-detail-card');
+    if (content) {
+        content.style.opacity = '0';
+        content.style.transform = 'translateX(20px)';
+        content.style.transition = 'all 0.3s ease';
+        
+        setTimeout(() => {
+            content.style.opacity = '1';
+            content.style.transform = 'translateX(0)';
+        }, 100);
+    }
+});
+</script>
+{% endblock %}

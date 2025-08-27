@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mes Groupes - BLIZZ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .groups-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--dark-blue);
+        min-height: 100vh;
+    }
+
+    .groups-header {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 0 15px var(--primary-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .groups-header h1 {
+        color: var(--text-color);
+        font-weight: 700;
+        margin: 0 0 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-shadow: 0 0 15px var(--primary-color);
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .btn-back {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: var(--text-color);
+        border: 1px solid var(--primary-color);
+        padding: 10px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px var(--primary-color);
+        color: var(--text-color);
+        text-decoration: none;
+    }
+
+    .btn-create {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: var(--text-color);
+        border: 1px solid var(--primary-color);
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px var(--primary-color);
+        color: var(--text-color);
+        text-decoration: none;
+    }
+
+    .groups-list {
+        background: linear-gradient(45deg, var(--dark-blue), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 0 15px var(--primary-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .group-item {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        background: rgba(108, 92, 231, 0.05);
+        cursor: pointer;
+    }
+
+    .group-item:hover {
+        background: rgba(108, 92, 231, 0.2);
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    .group-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-right: 20px;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+    }
+
+    .group-avatar.default {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-color);
+        font-weight: bold;
+        font-size: 24px;
+    }
+
+    .group-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .group-name {
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0 0 5px 0;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .admin-badge {
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .group-meta {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 8px;
+    }
+
+    .members-count {
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .group-last-message {
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 14px;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .group-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-end;
+    }
+
+    .unread-badge {
+        background: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .group-time {
+        font-size: 12px;
+        color: #999;
+    }
+
+    .group-quick-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 5px;
+    }
+
+    .btn-quick {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid rgba(102, 126, 234, 0.3);
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .btn-quick:hover {
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: #764ba2;
+        margin-bottom: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .groups-container {
+            padding: 10px;
+        }
+        
+        .header-actions {
+            flex-direction: column;
+        }
+        
+        .group-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 15px;
+        }
+        
+        .group-info {
+            order: 2;
+        }
+        
+        .group-actions {
+            order: 3;
+            flex-direction: row;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="groups-container">
+    <div class="groups-header">
+        <h1>
+            <i class="fas fa-users"></i>
+            Mes Groupes
+        </h1>
+        
+        <div class="header-actions">
+            <a href="{% url 'chat_home' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Retour au chat
+            </a>
+            
+            <a href="{% url 'create_group' %}" class="btn-create">
+                <i class="fas fa-plus"></i>
+                Créer un groupe
+            </a>
+        </div>
+    </div>
+
+    <div class="groups-list">
+        {% if groups %}
+            {% for group_data in groups %}
+                <div class="group-item" onclick="window.location.href='{% url 'group_chat' group_data.group.id %}'">
+                    {% if group_data.group.avatar %}
+                        <img src="{{ group_data.group.avatar.url }}" alt="{{ group_data.group.name }}" class="group-avatar">
+                    {% else %}
+                        <div class="group-avatar default">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="group-info">
+                        <div class="group-name">
+                            {{ group_data.group.name }}
+                            {% if group_data.is_admin %}
+                                <span class="admin-badge">
+                                    <i class="fas fa-crown"></i>
+                                    Admin
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="group-meta">
+                            <span class="members-count">
+                                <i class="fas fa-user"></i>
+                                {{ group_data.members_count }} membre{{ group_data.members_count|pluralize }}
+                            </span>
+                        </div>
+                        
+                        <p class="group-last-message">
+                            {% if group_data.last_message %}
+                                {{ group_data.last_message.sender.username }}: {{ group_data.last_message.content|truncatechars:50 }}
+                            {% else %}
+                                Aucun message
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="group-actions">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="group-time">
+                                {% if group_data.last_message %}
+                                    {{ group_data.last_message.created_at|date:"H:i" }}
+                                {% else %}
+                                    {{ group_data.group.created_at|date:"d/m" }}
+                                {% endif %}
+                            </span>
+                            
+                            {% if group_data.unread_count > 0 %}
+                                <span class="unread-badge">{{ group_data.unread_count }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="group-quick-actions">
+                            <a href="{% url 'group_members' group_data.group.id %}" class="btn-quick" onclick="event.stopPropagation()">
+                                <i class="fas fa-users"></i>
+                                Membres
+                            </a>
+                            
+                            {% if group_data.is_admin %}
+                                <a href="{% url 'group_settings' group_data.group.id %}" class="btn-quick" onclick="event.stopPropagation()">
+                                    <i class="fas fa-cog"></i>
+                                    Paramètres
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h3>Aucun groupe</h3>
+                <p>Vous ne faites partie d'aucun groupe pour le moment.</p>
+                <div style="margin-top: 20px;">
+                    <a href="{% url 'create_group' %}" class="btn-create">
+                        <i class="fas fa-plus"></i>
+                        Créer votre premier groupe
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh des groupes toutes les 30 secondes
+    setInterval(function() {
+        if (document.visibilityState === 'visible') {
+            location.reload();
+        }
+    }, 30000);
+</script>
+{% endblock %}

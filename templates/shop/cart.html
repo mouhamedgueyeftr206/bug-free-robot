@@ -1,0 +1,452 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panier - Boutique Gaming BLIZZ{% endblock %}
+
+{% block content %}
+<style>
+    .cart-container {
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .cart-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .cart-header h1 {
+        font-family: 'Halo', sans-serif;
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        text-shadow: 0 0 20px var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .cart-main {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 3rem;
+        margin-bottom: 3rem;
+    }
+
+    .cart-items {
+        background: linear-gradient(145deg, rgba(15, 23, 41, 0.9), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 15px;
+        padding: 2rem;
+    }
+
+    .cart-item {
+        display: grid;
+        grid-template-columns: 80px 1fr auto auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+
+    .item-image i {
+        color: white;
+        font-size: 2rem;
+        opacity: 0.7;
+    }
+
+    .item-info h3 {
+        font-family: 'RussoOne', sans-serif;
+        color: white;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .item-price {
+        color: var(--secondary-color);
+        font-family: 'RussoOne', sans-serif;
+        font-size: 1.1rem;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .quantity-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--primary-color);
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .quantity-btn:hover {
+        background: var(--primary-color);
+        transform: scale(1.1);
+    }
+
+    .quantity-input {
+        background: rgba(15, 23, 41, 0.8);
+        border: 1px solid var(--primary-color);
+        color: white;
+        text-align: center;
+        width: 50px;
+        height: 35px;
+        border-radius: 8px;
+    }
+
+    .remove-btn {
+        background: rgba(231, 76, 60, 0.2);
+        border: 1px solid #e74c3c;
+        color: #e74c3c;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .remove-btn:hover {
+        background: #e74c3c;
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .cart-summary {
+        background: linear-gradient(145deg, rgba(15, 23, 41, 0.9), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 15px;
+        padding: 2rem;
+        height: fit-content;
+    }
+
+    .summary-title {
+        font-family: 'RussoOne', sans-serif;
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        color: white;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-family: 'RussoOne', sans-serif;
+        font-size: 1.3rem;
+        color: var(--secondary-color);
+        margin: 1.5rem 0;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .checkout-btn {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 25px;
+        font-family: 'RussoOne', sans-serif;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-bottom: 1rem;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+    }
+
+    .checkout-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px var(--primary-color);
+        color: white;
+        text-decoration: none;
+    }
+
+    .continue-shopping {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid white;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 20px;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+        transition: all 0.3s ease;
+        font-family: 'RussoOne', sans-serif;
+    }
+
+    .continue-shopping:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(145deg, rgba(15, 23, 41, 0.9), rgba(108, 92, 231, 0.1));
+        border: 1px solid var(--primary-color);
+        border-radius: 15px;
+    }
+
+    .empty-cart i {
+        font-size: 5rem;
+        color: var(--primary-color);
+        margin-bottom: 2rem;
+        opacity: 0.7;
+    }
+
+    .empty-cart h3 {
+        font-family: 'RussoOne', sans-serif;
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    .empty-cart p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .cart-container {
+            padding: 1rem;
+        }
+        
+        .cart-main {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        .cart-item {
+            grid-template-columns: 60px 1fr;
+            gap: 1rem;
+        }
+        
+        .quantity-controls, .remove-btn {
+            grid-column: 2;
+            justify-self: end;
+        }
+    }
+</style>
+
+<div class="cart-container">
+    <div class="cart-header">
+        <h1>🛒 Mon Panier</h1>
+    </div>
+
+    {% if cart and not cart.is_empty %}
+    <div class="cart-main">
+        <!-- Cart Items -->
+        <div class="cart-items">
+            <h3 class="summary-title">Articles ({{ cart.get_total_items }})</h3>
+            {% for item in cart.items.all %}
+            <div class="cart-item" data-item-id="{{ item.id }}">
+                <div class="item-image">
+                    {% if item.product.featured_image %}
+                    <img src="{{ item.product.featured_image.url }}" alt="{{ item.product.name }}">
+                    {% else %}
+                    <i class="fas fa-gamepad"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="item-info">
+                    <h3>{{ item.product.name }}</h3>
+                    {% if item.variant %}
+                    <small style="color: rgba(255, 255, 255, 0.6);">Variante: {{ item.variant.name }}</small>
+                    {% endif %}
+                    <div class="item-price">{{ item.price }} FCFA</div>
+                </div>
+                
+                <div class="quantity-controls">
+                    <button class="quantity-btn" data-action="decrease" data-item-id="{{ item.id }}">-</button>
+                    <input type="number" class="quantity-input" value="{{ item.quantity }}" min="1" max="10" data-item-id="{{ item.id }}">
+                    <button class="quantity-btn" data-action="increase" data-item-id="{{ item.id }}">+</button>
+                </div>
+                
+                <button class="remove-btn" data-item-id="{{ item.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="cart-summary">
+            <h3 class="summary-title">💰 Résumé</h3>
+            
+            <div class="summary-row">
+                <span>Sous-total:</span>
+                <span id="cart-subtotal">{{ cart.get_total_price }} FCFA</span>
+            </div>
+            <div class="summary-row">
+                <span>Livraison:</span>
+                <span>Gratuite</span>
+            </div>
+            
+            <div class="summary-total">
+                <span>Total:</span>
+                <span id="cart-total">{{ cart.get_total_price }} FCFA</span>
+            </div>
+            
+            <a href="{% url 'checkout' %}" class="checkout-btn">
+                <i class="fas fa-credit-card"></i>
+                COMMANDER
+            </a>
+            
+            <a href="{% url 'shop_products' %}" class="continue-shopping">
+                <i class="fas fa-arrow-left"></i>
+                Continuer mes achats
+            </a>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty Cart -->
+    <div class="empty-cart">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>Votre panier est vide</h3>
+        <p>Découvrez nos produits gaming et ajoutez-les à votre panier</p>
+        <a href="{% url 'shop_products' %}" class="checkout-btn">
+            <i class="fas fa-shopping-bag"></i>
+            DÉCOUVRIR NOS PRODUITS
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityButtons = document.querySelectorAll('.quantity-btn');
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    const removeButtons = document.querySelectorAll('.remove-btn');
+
+    quantityButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            const itemId = this.getAttribute('data-item-id');
+            const input = document.querySelector(`.quantity-input[data-item-id="${itemId}"]`);
+            
+            let newQuantity = parseInt(input.value);
+            if (action === 'increase' && newQuantity < 10) {
+                newQuantity++;
+            } else if (action === 'decrease' && newQuantity > 1) {
+                newQuantity--;
+            }
+            
+            input.value = newQuantity;
+            updateCartItem(itemId, newQuantity);
+        });
+    });
+
+    quantityInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const quantity = parseInt(this.value);
+            
+            if (quantity >= 1 && quantity <= 10) {
+                updateCartItem(itemId, quantity);
+            } else {
+                this.value = quantity < 1 ? 1 : 10;
+            }
+        });
+    });
+
+    removeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            removeCartItem(itemId);
+        });
+    });
+
+    function updateCartItem(itemId, quantity) {
+        const formData = new FormData();
+        formData.append('item_id', itemId);
+        formData.append('quantity', quantity);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        fetch('{% url "update_cart_item" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    }
+
+    function removeCartItem(itemId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
+            const formData = new FormData();
+            formData.append('item_id', itemId);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            fetch('{% url "remove_from_cart" %}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue');
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
