@@ -365,6 +365,17 @@ def user_search(request):
                 common_games = set(user_favorite_games) & set(user_games) if user_favorite_games else set()
                 recommendations.append((user, len(common_games), list(common_games)))
     
+    # If AJAX, return compact JSON for quick member add UI
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        users_json = []
+        for user, _, _ in recommendations:
+            users_json.append({
+                'id': user.id,
+                'username': user.username,
+                'avatar': (user.profile.profileimg.url if hasattr(user, 'profile') and user.profile.profileimg else None)
+            })
+        return JsonResponse({'users': users_json})
+
     context = {
         'recommendations': recommendations,
         'user_favorite_games': user_favorite_games,
